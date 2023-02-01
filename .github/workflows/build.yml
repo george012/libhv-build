@@ -37,7 +37,7 @@ jobs:
           sudo apt update \
           && sudo apt upgrade \
           && sudo apt install libssl-dev libnghttp2-dev \
-          && git submodule update --init
+          && git submodule update --init \
           && cd libhv \
           && ./configure --with-openssl --with-nghttp2 \
           make libhv evpp
@@ -55,12 +55,7 @@ jobs:
       - uses: actions/checkout@v3
       - name: build
         run: |
-          git submodule update --init \
-          && cd libhv \
-          && mkdir cmake-build-win64 \
-          && cd cmake-build-win64 \
-          && cmake .. -G "Visual Studio 17 2022" -A x64 \
-          && cmake --build .
+          git submodule update --init && cd libhv && mkdir cmake-build-win64 && cd cmake-build-win64 && cmake .. -G "Visual Studio 17 2022" -A x64 && cmake --build .
 
   build-apple:
     name: build-apple
