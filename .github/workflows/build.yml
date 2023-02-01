@@ -34,13 +34,12 @@ jobs:
 
       - name: build
         run: |
-          sudo apt update
-          udo apt install libssl-dev libnghttp2-dev
-          git submodule update --init
           cd libhv
+          sudo apt update
+          sudo apt install libssl-dev libnghttp2-dev
           ./configure --with-openssl --with-nghttp2
           make libhv evpp
-
+      
       - name: test
         run: |
           make check
