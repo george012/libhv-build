@@ -14,6 +14,10 @@ jobs:
     permissions:
       contents: write
     steps:
+      - name: Sleep for 30 seconds
+        run: sleep 5s
+        shell: bash
+
       - name: Checkout code
         uses: actions/checkout@v3
 
@@ -33,10 +37,7 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
-      
-      - name: ReCheckout
-        uses: actions/checkout@v3
-        
+
       - name: GitHub Release
         uses: actions/create-release@latest
         env:
