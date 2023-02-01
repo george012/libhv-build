@@ -35,6 +35,7 @@ jobs:
       - name: build
         run: |
           sudo apt update \
+          && sudo apt upgrade \
           && sudo apt install libssl-dev libnghttp2-dev \
           && git submodule update --init
           && cd libhv \
