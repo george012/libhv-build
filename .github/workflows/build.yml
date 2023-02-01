@@ -21,6 +21,8 @@ jobs:
           && git config --local user.name "WMYeah_AT" \
           && git tag build_$(date "%Y%m%d%H%M%S") \
           && git push --tags
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   CreateRelease:
     runs-on: ubuntu-latest
@@ -117,6 +119,7 @@ jobs:
           echo APP_OLD_VERSION=${APP_VERSION%.*}.$((${APP_VERSION##*.}-2)) >> ${GITHUB_ENV}
       - name: Remove Old Release
         run: |
-          gh release delete ${{ env.APP_OLD_VERSION }} -y
+          gh release delete ${{ env.APP_OLD_VERSION }} -y \
+          && git push origin --delete ${{ env.APP_OLD_VERSION }}
         env:
           GH_TOKEN: ${{ github.token }}
