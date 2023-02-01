@@ -21,6 +21,8 @@ jobs:
           && git config --local user.name "WMYeah_AT" \
           && git tag build_$(date "%Y%m%d%H%M%S") \
           && git push --tags
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           repo-token: ${{ secrets.GITHUB_TOKEN }}
       
