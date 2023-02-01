@@ -19,7 +19,7 @@ jobs:
 
       - name: Add Tag
         run: |
-          current_beijign_time=$(echo $(TZ=UTC-8 date +%Y-%m-%d" "%H:%M:%S)) \
+          current_beijign_time=$(echo $(TZ=UTC-8 date +%Y%m%d""%H%M%S)) \
           && git config --local user.email "george012@163.com" \
           && git config --local user.name "WMYeah_AT" \
           && git tag build_${current_beijign_time} \
