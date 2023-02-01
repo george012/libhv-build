@@ -3,9 +3,10 @@ name: build
 env:
   ProductName: libhv
 
-push:
-  branches:
-    - main
+on:
+  push:
+    branches:
+      - main
 
 jobs:
   CreateRelease:
