@@ -14,10 +14,6 @@ jobs:
     permissions:
       contents: write
     steps:
-      - name: Sleep for 30 seconds
-        run: sleep 5s
-        shell: bash
-
       - name: Checkout code
         uses: actions/checkout@v3
 
@@ -35,6 +31,10 @@ jobs:
     runs-on: ubuntu-latest
     needs: AddTag
     steps:
+      - name: Sleep for 5 seconds
+        run: sleep 5s
+        shell: bash
+
       - name: Checkout code
         uses: actions/checkout@v3
 
