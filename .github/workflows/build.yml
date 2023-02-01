@@ -34,10 +34,11 @@ jobs:
 
       - name: build
         run: |
-          sudo apt update
-          sudo apt install libssl-dev libnghttp2-dev
-          cd libhv
-          ./configure --with-openssl --with-nghttp2
+          sudo apt update \
+          && sudo apt install libssl-dev libnghttp2-dev \
+          && git submodule update --init
+          && cd libhv \
+          && ./configure --with-openssl --with-nghttp2 \
           make libhv evpp
 
       - name: test
@@ -50,35 +51,38 @@ jobs:
     runs-on: windows-latest
     needs: CreateRelease
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: build
         run: |
-          cd libhv
-          mkdir cmake-build-win64
-          cd cmake-build-win64
-          cmake .. -G "Visual Studio 17 2022" -A x64
-          cmake --build .
+          git submodule update --init \
+          && cd libhv \
+          && mkdir cmake-build-win64 \
+          && cd cmake-build-win64 \
+          && cmake .. -G "Visual Studio 17 2022" -A x64 \
+          && cmake --build .
 
   build-apple:
     name: build-apple
     runs-on: macos-latest
     needs: CreateRelease
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
 
       - name: build-mac
         run: |
-          cd libhv
-          ./configure
-          make libhv evpp examples unittest
+          git submodule update --init \
+          && cd libhv \
+          && ./configure \
+          && make libhv evpp examples unittest
 
       - name: build-ios
         run: |
-          cd libhv
-          mkdir cmake-build-ios
-          cd cmake-build-ios
-          cmake .. -G Xcode -DCMAKE_TOOLCHAIN_FILE=../cmake/ios.toolchain.cmake -DPLATFORM=OS -DDEPLOYMENT_TARGET=9.0 -DARCHS="arm64"
-          cmake --build . --target hv_static --config Release
+          git submodule update --init \
+          && cd libhv \
+          && mkdir cmake-build-ios \
+          && cd cmake-build-ios \
+          && cmake .. -G Xcode -DCMAKE_TOOLCHAIN_FILE=../cmake/ios.toolchain.cmake -DPLATFORM=OS -DDEPLOYMENT_TARGET=9.0 -DARCHS="arm64" \
+          && cmake --build . --target hv_static --config Release
 
   RemoveOldRelease:
     runs-on: ubuntu-latest
