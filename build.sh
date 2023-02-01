@@ -2,12 +2,13 @@
 ProductName=libhv
 Build () 
 {
-    aTime=$(date "+%Y-%m-%d %H:%M:%S")
-    
-    git submodule update --init \
+    current_beijign_time=$(echo $(TZ=UTC-8 date +%Y%m%d""%H%M%S)) \
+    && git submodule update --init \
     && git add . \
-    && git commit -m "build at ${aTime}" \
-    && git push 
+    && git commit -m "build at ${current_beijign_time}" \
+    && git push \
+    && git tag build_${current_beijign_time} \
+    && git push --tags
 }
 
 Check () 
