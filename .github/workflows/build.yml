@@ -40,7 +40,7 @@ jobs:
           && git submodule update --init \
           && cd libhv \
           && ./configure --with-openssl --with-nghttp2 \
-          make libhv evpp
+          && make libhv evpp
 
       - name: test
         run: |
