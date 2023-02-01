@@ -34,16 +34,11 @@ jobs:
 
       - name: build
         run: |
-          cd libhv
-          sudo apt update
-          sudo apt install libssl-dev libnghttp2-dev
-          ./configure --with-openssl --with-nghttp2
-          make libhv evpp
+          cd libhv && sudo apt update && sudo apt install libssl-dev libnghttp2-dev && ./configure --with-openssl --with-nghttp2 && make libhv evpp
       
       - name: test
         run: |
-          make check
-          make run-unittest
+          make check && make run-unittest
 
   build-windows:
     name: build-windows
