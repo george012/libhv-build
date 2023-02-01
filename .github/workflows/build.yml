@@ -13,7 +13,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v2
 
       - name: GitHub Release
         uses: actions/create-release@latest
@@ -30,7 +30,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: CreateRelease
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v2
 
       - name: build
         run: |
@@ -52,7 +52,7 @@ jobs:
     runs-on: windows-latest
     needs: CreateRelease
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v2
       - name: build
         run: |
           git submodule update --init && cd libhv && mkdir cmake-build-win64 && cd cmake-build-win64 && cmake .. -G "Visual Studio 17 2022" -A x64 && cmake --build .
