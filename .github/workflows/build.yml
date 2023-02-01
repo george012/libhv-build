@@ -17,10 +17,9 @@ jobs:
 
       - name: Add Tag
         run: |
-          git config --local user.email "george012@163.com"
-          git config --local user.name "WMYeah_AT"
-          git remote set-url origin https://${{ github.actor }}:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}
-          git tag v${{ github.ref }} \
+          git config --local user.email "george012@163.com" \
+          && git config --local user.name "WMYeah_AT" \
+          && git tag v${{ github.ref }} \
           && git push --tags
 
       - name: GitHub Release
