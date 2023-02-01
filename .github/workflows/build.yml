@@ -21,7 +21,9 @@ jobs:
           && git config --local user.name "WMYeah_AT" \
           && git tag v${{ github.ref }} \
           && git push --tags
-
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        
       - name: GitHub Release
         uses: actions/create-release@latest
         env:
