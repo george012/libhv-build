@@ -34,7 +34,7 @@ jobs:
 
       - name: build
         run: |
-          cd libhv && sudo apt update && sudo apt install libssl-dev libnghttp2-dev && ./configure --with-openssl --with-nghttp2 && make libhv evpp
+          git submodule update --init && cd libhv && sudo apt update && sudo apt install libssl-dev libnghttp2-dev && ./configure --with-openssl --with-nghttp2 && make libhv evpp
       
       - name: test
         run: |
