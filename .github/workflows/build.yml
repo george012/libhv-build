@@ -9,23 +9,25 @@ on:
       - main
 
 jobs:
-  CreateRelease:
+  AddTag:
     runs-on: ubuntu-latest
     permissions:
       contents: write
       packages: write
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
-
       - name: Add Tag
         run: |
           git config --local user.email "george012@163.com" \
           && git config --local user.name "WMYeah_AT" \
           && git tag build_$(date "%Y%m%d%H%M%S") \
           && git push --tags
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  CreateRelease:
+    runs-on: ubuntu-latest
+    needs: AddTag
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
         
       - name: GitHub Release
         uses: actions/create-release@latest
