@@ -11,10 +11,12 @@ on:
 jobs:
   CreateRelease:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
-
+      
       - name: Add Tag
         run: |
           git config --local user.email "george012@163.com" \
@@ -23,8 +25,6 @@ jobs:
           && git push --tags
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          repo-token: ${{ secrets.GITHUB_TOKEN }}
       
       - name: GitHub Release
         uses: actions/create-release@latest
