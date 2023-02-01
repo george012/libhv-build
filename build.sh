@@ -2,7 +2,7 @@
 ProductName=libhv
 Build () 
 {
-    aTime=$(date "+%Y%m%d%H%M%S")
+    aTime=$(date "+%Y-%m-%d %H:%M:%S")
     
     git submodule update --init \
     && git add . \
