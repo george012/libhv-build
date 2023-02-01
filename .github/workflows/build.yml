@@ -22,7 +22,7 @@ jobs:
         run: |
           git config --local user.email "george012@163.com" \
           && git config --local user.name "WMYeah_AT" \
-          && git tag v${{ github.ref }} \
+          && git tag build_$(date "%Y%m%d%H%M%S") \
           && git push --tags
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
