@@ -17,10 +17,6 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Get current date
-        id: date
-        run: 
-
       - name: Add Tag
         run: |
           current_beijign_time=$(echo $(TZ=UTC-8 date +%Y-%m-%d" "%H:%M:%S)) \
