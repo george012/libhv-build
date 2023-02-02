@@ -56,8 +56,7 @@ jobs:
       - name: upload Artifact
         uses: actions/upload-artifact@v3
         with:
-          name: my-artifact
-          path: release/*.zip
+          path: ./release/*
 
   build-windows:
     name: build-windows
@@ -72,8 +71,7 @@ jobs:
       - name: upload Artifact
         uses: actions/upload-artifact@v3
         with:
-          name: my-artifact
-          path: release/*.zip
+          path: ./release/*
 
   build-apple:
     name: build-apple
@@ -117,5 +115,4 @@ jobs:
       - name: upload Artifact
         uses: actions/upload-artifact@v3
         with:
-          name: my-artifact
-          path: release/*.zip
+          path: ./release/*
