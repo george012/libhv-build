@@ -40,22 +40,24 @@ jobs:
           && sudo apt install libssl-dev libnghttp2-dev \
           && ./configure --with-openssl --with-nghttp2 \
           && make libhv evpp
-      
+          && makedir -p libhv_linux/include \
+          && makedir -p libhv_linux/lib \
+          && mv ./include/* libhv_linux/include \
+          && mv ./lib/* libhv_linux/lib \
+          && zip -r libhv_linux.zip
+          && mv ./libhv_linux.zip ../../release
+          
       - name: test
         run: |
           cd libhv \
           && make check \
           && make run-unittest
 
-      - name: Upload binaries to release
-        uses: svenstaro/upload-release-action@v2
+      - name: Push Build File To Releases
+        uses: ncipollo/release-action@v1
         with:
-          repo_token: ${{ secrets.GITHUB_TOKEN }}
-          file: target/release/mything
-          asset_name: mything
-          tag: ${{ github.ref }}
-          overwrite: true
-          body: "This is my release text"
+          artifacts: "./release/*.zip"
+          token: ${{ secrets.GITHUB_TOKEN }}
 
   build-windows:
     name: build-windows
@@ -76,7 +78,7 @@ jobs:
 
       - name: Make Release Dir
         run: |
-          make -p release
+          makedir -p release
 
       - name: build-mac
         run: |
