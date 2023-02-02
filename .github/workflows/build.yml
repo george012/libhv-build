@@ -47,6 +47,16 @@ jobs:
           && make check \
           && make run-unittest
 
+      - name: Upload binaries to release
+        uses: svenstaro/upload-release-action@v2
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          file: target/release/mything
+          asset_name: mything
+          tag: ${{ github.ref }}
+          overwrite: true
+          body: "This is my release text"
+
   build-windows:
     name: build-windows
     runs-on: windows-latest
@@ -64,12 +74,22 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
+      - name: Make Release Dir
+        run: |
+          make -p release
+
       - name: build-mac
         run: |
           git submodule update --init \
           && cd libhv \
           && ./configure \
           && make libhv evpp examples unittest
+          && makedir -p libhv_mac/include \
+          && makedir -p libhv_mac/lib \
+          && mv ./include/* libhv_mac/include \
+          && mv ./lib/* libhv_mac/lib \
+          && zip -r libhv_mac.zip ./libhv_ios \
+          && mv ./libhv_mac.zip ../../release
 
       - name: build-ios
         run: |
@@ -78,5 +98,16 @@ jobs:
           && mkdir cmake-build-ios \
           && cd cmake-build-ios \
           && cmake .. -G Xcode -DCMAKE_TOOLCHAIN_FILE=../cmake/ios.toolchain.cmake -DPLATFORM=OS -DDEPLOYMENT_TARGET=9.0 -DARCHS="arm64" \
-          && cmake --build . --target hv_static --config Release
-
+          && cmake --build . --target hv_static --config Release \
+          && makedir -p libhv_ios/include \
+          && makedir -p libhv_ios/lib \
+          && mv ./include/* libhv_ios/include \
+          && mv ./lib/* libhv_ios/lib \
+          && zip -r libhv_ios.zip ./libhv_ios \
+          && mv ./libhv_ios.zip ../../release
+    
+      - name: Push Build File To Releases
+        uses: ncipollo/release-action@v1
+        with:
+          artifacts: "./release/*.zip"
+          token: ${{ secrets.GITHUB_TOKEN }}
