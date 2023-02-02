@@ -53,12 +53,11 @@ jobs:
           && make check \
           && make run-unittest
 
-      - name: Push Build File To Releases
-        uses: ncipollo/release-action@v1
+      - name: upload Artifact
+        uses: actions/upload-artifact@v3
         with:
-          artifacts: "./release/*.zip"
-          token: ${{ secrets.GITHUB_TOKEN }}
-          updateOnlyUnreleased: true
+          name: my-artifact
+          path: release/*.zip
 
   build-windows:
     name: build-windows
@@ -70,12 +69,11 @@ jobs:
         run: |
           git submodule update --init && cd libhv && mkdir cmake-build-win64 && cd cmake-build-win64 && cmake .. -G "Visual Studio 17 2022" -A x64 && cmake --build . && mkdir -p libhv_windows/include && mkdir -p libhv_windows/lib && mv ./include/* libhv_windows/include && mv ./bin/* libhv_windows/lib && zip -r libhv_windows.zip ./libhv_windows && mv ./libhv_windows.zip ../../release
 
-      - name: Push Build File To Releases
-        uses: ncipollo/release-action@v1
+      - name: upload Artifact
+        uses: actions/upload-artifact@v3
         with:
-          artifacts: "./release/*.zip"
-          token: ${{ secrets.GITHUB_TOKEN }}
-          updateOnlyUnreleased: true
+          name: my-artifact
+          path: release/*.zip
 
   build-apple:
     name: build-apple
@@ -116,9 +114,8 @@ jobs:
           && zip -r libhv_ios.zip ./libhv_ios \
           && mv ./libhv_ios.zip ../../release
     
-      - name: Push Build File To Releases
-        uses: ncipollo/release-action@v1
+      - name: upload Artifact
+        uses: actions/upload-artifact@v3
         with:
-          artifacts: "./release/*.zip"
-          token: ${{ secrets.GITHUB_TOKEN }}
-          updateOnlyUnreleased: true
+          name: my-artifact
+          path: release/*.zip
