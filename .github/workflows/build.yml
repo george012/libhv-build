@@ -39,14 +39,14 @@ jobs:
           && sudo apt update \
           && sudo apt install libssl-dev libnghttp2-dev \
           && ./configure --with-openssl --with-nghttp2 \
-          && make libhv evpp
-          && makedir -p libhv_linux/include \
-          && makedir -p libhv_linux/lib \
+          && make libhv evpp \
+          && mkdir -p libhv_linux/include \
+          && mkdir -p libhv_linux/lib \
           && mv ./include/* libhv_linux/include \
           && mv ./lib/* libhv_linux/lib \
-          && zip -r libhv_linux.zip
+          && zip -r libhv_linux.zip \
           && mv ./libhv_linux.zip ../../release
-          
+
       - name: test
         run: |
           cd libhv \
@@ -69,6 +69,13 @@ jobs:
         run: |
           git submodule update --init && cd libhv && mkdir cmake-build-win64 && cd cmake-build-win64 && cmake .. -G "Visual Studio 17 2022" -A x64 && cmake --build .
 
+      - name: Push Build File To Releases
+        uses: ncipollo/release-action@v1
+        with:
+          artifacts: "./release/*.zip"
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+
   build-apple:
     name: build-apple
     runs-on: macos-latest
@@ -78,16 +85,16 @@ jobs:
 
       - name: Make Release Dir
         run: |
-          makedir -p release
+          mkdir -p release
 
       - name: build-mac
         run: |
           git submodule update --init \
           && cd libhv \
           && ./configure \
-          && make libhv evpp examples unittest
-          && makedir -p libhv_mac/include \
-          && makedir -p libhv_mac/lib \
+          && make libhv evpp examples unittest \
+          && mkdir -p libhv_mac/include \
+          && mkdir -p libhv_mac/lib \
           && mv ./include/* libhv_mac/include \
           && mv ./lib/* libhv_mac/lib \
           && zip -r libhv_mac.zip ./libhv_ios \
@@ -101,8 +108,8 @@ jobs:
           && cd cmake-build-ios \
           && cmake .. -G Xcode -DCMAKE_TOOLCHAIN_FILE=../cmake/ios.toolchain.cmake -DPLATFORM=OS -DDEPLOYMENT_TARGET=9.0 -DARCHS="arm64" \
           && cmake --build . --target hv_static --config Release \
-          && makedir -p libhv_ios/include \
-          && makedir -p libhv_ios/lib \
+          && mkdir -p libhv_ios/include \
+          && mkdir -p libhv_ios/lib \
           && mv ./include/* libhv_ios/include \
           && mv ./lib/* libhv_ios/lib \
           && zip -r libhv_ios.zip ./libhv_ios \
