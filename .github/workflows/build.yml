@@ -11,19 +11,13 @@ on:
 jobs:
   CreateRelease:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
-
-      - name: GitHub Release
-        uses: actions/create-release@latest
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - uses: actions/checkout@latest
+      - uses: ncipollo/release-action@latest
         with:
-          tag_name: ${{ github.ref }}
-          release_name: ${{ github.ref }}
-          draft: false
-          prerelease: false
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Echo Upload Url
         run: |
@@ -80,7 +74,7 @@ jobs:
 
       - name: build
         run: |
-          git submodule update --init && cd libhv && mkdir cmake-build-win64 && cd cmake-build-win64 && cmake .. -G "Visual Studio 17 2022" -A x64 && cmake --build . && mkdir -p libhv_windows/include && mkdir -p libhv_windows/lib && mv ./include/hv/* libhv_windows/include && mv ./bin/* libhv_windows/lib && mv ./libhv_windows ../release
+          git submodule update --init && cd libhv && mkdir cmake-build-win64 && cd cmake-build-win64 && cmake .. -G "Visual Studio 17 2022" -A x64 && cmake --build . && mkdir -p libhv_windows/include && mkdir -p libhv_windows/lib && mv ./include/hv/* libhv_windows/include && mv ./bin/* libhv_windows/lib && mv ./libhv_windows ../../release
 
       - name: Upload Release Asset
         id: upload-release-asset 
@@ -127,7 +121,7 @@ jobs:
           && mkdir -p libhv_ios/lib \
           && mv ./include/hv/* libhv_ios/include \
           && mv ./lib/* libhv_ios/lib \
-          && mv ./libhv_mac ../release
+          && mv ./libhv_ios ../release
 
       # - name: Upload Release Asset
       #   id: upload-release-asset 
