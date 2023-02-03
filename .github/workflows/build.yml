@@ -46,10 +46,9 @@ jobs:
           && make libhv evpp \
           && mkdir -p libhv_linux/include \
           && mkdir -p libhv_linux/lib \
-          && mv ./include/* libhv_linux/include \
+          && mv ./include/hv/* libhv_linux/include \
           && mv ./lib/* libhv_linux/lib \
-          && zip -r libhv_linux.zip ./libhv_linux \
-          && mv ./libhv_linux.zip ../release
+          && mv ./libhv_linux ../release
 
       - name: test
         run: |
@@ -62,7 +61,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ github.token }}
         with:
-          asset_paths: '["./release"]'
+          asset_paths: '["./release/*"]'
 
   build-windows:
     name: build-windows
@@ -77,14 +76,14 @@ jobs:
 
       - name: build
         run: |
-          git submodule update --init && cd libhv && mkdir cmake-build-win64 && cd cmake-build-win64 && cmake .. -G "Visual Studio 17 2022" -A x64 && cmake --build . && mkdir -p libhv_windows/include && mkdir -p libhv_windows/lib && mv ./include/* libhv_windows/include && mv ./bin/* libhv_windows/lib && zip -r libhv_windows.zip ./libhv_windows && mv ./libhv_windows.zip ../release
+          git submodule update --init && cd libhv && mkdir cmake-build-win64 && cd cmake-build-win64 && cmake .. -G "Visual Studio 17 2022" -A x64 && cmake --build . && mkdir -p libhv_windows/include && mkdir -p libhv_windows/lib && mv ./include/hv/* libhv_windows/include && mv ./bin/* libhv_windows/lib && mv ./libhv_windows ../release
 
       - name: Upload release binaries
-        uses: alexellis/upload-assets@master
+        uses: alexellis/upload-assets@latest
         env:
           GITHUB_TOKEN: ${{ github.token }}
         with:
-          asset_paths: '["./release"]'
+          asset_paths: '["./release/*"]'
 
   build-apple:
     name: build-apple
@@ -105,10 +104,9 @@ jobs:
           && make libhv evpp examples unittest \
           && mkdir -p libhv_mac/include \
           && mkdir -p libhv_mac/lib \
-          && mv ./include/* libhv_mac/include \
+          && mv ./include/hv/* libhv_mac/include \
           && mv ./lib/* libhv_mac/lib \
-          && zip -r libhv_mac.zip ./libhv_mac \
-          && mv ./libhv_mac.zip ../../release
+          && mv ./libhv_mac ../release
 
       - name: build-ios
         run: |
@@ -120,11 +118,10 @@ jobs:
           && cmake --build . --target hv_static --config Release \
           && mkdir -p libhv_ios/include \
           && mkdir -p libhv_ios/lib \
-          && mv ./include/* libhv_ios/include \
+          && mv ./include/hv/* libhv_ios/include \
           && mv ./lib/* libhv_ios/lib \
-          && zip -r libhv_ios.zip ./libhv_ios \
-          && mv ./libhv_ios.zip ../../release
-    
+          && mv ./libhv_mac ../release
+
       # - name: Upload Release Asset
       #   id: upload-release-asset 
       #   uses: actions/upload-release-asset@latest
@@ -140,5 +137,5 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ github.token }}
         with:
-          asset_paths: '["./release"]'
+          asset_paths: '["./release/*"]'
 #          asset_paths: '["./bin/release-it-darwin", "./bin/release-it-amd64", "./bin/release-it-arm", "./bin/release-it-arm64", "./bin/release-it.exe"]'
