@@ -25,6 +25,10 @@ jobs:
           draft: false
           prerelease: false
 
+      - name: Echo Upload Url
+        run: |
+          echo ${{ steps.create_release.outputs.upload_url }}
+
   build-linux:
     name: build-linux
     runs-on: ubuntu-latest
@@ -78,12 +82,15 @@ jobs:
         run: |
           git submodule update --init && cd libhv && mkdir cmake-build-win64 && cd cmake-build-win64 && cmake .. -G "Visual Studio 17 2022" -A x64 && cmake --build . && mkdir -p libhv_windows/include && mkdir -p libhv_windows/lib && mv ./include/hv/* libhv_windows/include && mv ./bin/* libhv_windows/lib && mv ./libhv_windows ../release
 
-      - name: Upload release binaries
-        uses: alexellis/upload-assets@latest
+      - name: Upload Release Asset
+        id: upload-release-asset 
+        uses: actions/upload-release-asset@latest
         env:
-          GITHUB_TOKEN: ${{ github.token }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          asset_paths: '["./release/*"]'
+          upload_url: ${{ github.event.release.upload_url }}
+          asset_path: ./release/*
+          asset_content_type: application/zip
 
   build-apple:
     name: build-apple
