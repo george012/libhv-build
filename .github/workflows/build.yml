@@ -58,7 +58,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ github.token }}
         with:
-          asset_paths: ["./release"]
+          asset_paths: '["./release"]'
 
   build-windows:
     name: build-windows
@@ -75,7 +75,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ github.token }}
         with:
-          asset_paths: ["./release"]
+          asset_paths: '["./release"]'
 
   build-apple:
     name: build-apple
@@ -131,5 +131,5 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ github.token }}
         with:
-          asset_paths: ["./release"]
+          asset_paths: '["./release"]'
 #          asset_paths: '["./bin/release-it-darwin", "./bin/release-it-amd64", "./bin/release-it-arm", "./bin/release-it-arm64", "./bin/release-it.exe"]'
