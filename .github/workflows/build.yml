@@ -32,6 +32,10 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
+      - name: Make Release Dir
+        run: |
+          mkdir -p release
+
       - name: build
         run: |
           git submodule update --init \
@@ -45,7 +49,7 @@ jobs:
           && mv ./include/* libhv_linux/include \
           && mv ./lib/* libhv_linux/lib \
           && zip -r libhv_linux.zip ./libhv_linux \
-          && mv ./libhv_linux.zip ../../release
+          && mv ./libhv_linux.zip ../release
 
       - name: test
         run: |
@@ -66,9 +70,14 @@ jobs:
     needs: CreateRelease
     steps:
       - uses: actions/checkout@v3
+
+      - name: Make Release Dir
+        run: |
+          mkdir -p release
+
       - name: build
         run: |
-          git submodule update --init && cd libhv && mkdir cmake-build-win64 && cd cmake-build-win64 && cmake .. -G "Visual Studio 17 2022" -A x64 && cmake --build . && mkdir -p libhv_windows/include && mkdir -p libhv_windows/lib && mv ./include/* libhv_windows/include && mv ./bin/* libhv_windows/lib && zip -r libhv_windows.zip ./libhv_windows && mv ./libhv_windows.zip ../../release
+          git submodule update --init && cd libhv && mkdir cmake-build-win64 && cd cmake-build-win64 && cmake .. -G "Visual Studio 17 2022" -A x64 && cmake --build . && mkdir -p libhv_windows/include && mkdir -p libhv_windows/lib && mv ./include/* libhv_windows/include && mv ./bin/* libhv_windows/lib && zip -r libhv_windows.zip ./libhv_windows && mv ./libhv_windows.zip ../release
 
       - name: Upload release binaries
         uses: alexellis/upload-assets@master
