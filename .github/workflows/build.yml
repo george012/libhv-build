@@ -15,7 +15,7 @@ jobs:
       contents: write
     steps:
       - uses: actions/checkout@latest
-      - uses: ncipollo/release-action@latest
+      - uses: ncipollo/release-action@main
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
 
