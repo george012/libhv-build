@@ -2,13 +2,15 @@
 ProductName=libhv
 Build () 
 {
-    current_beijign_time=$(echo $(TZ=UTC-8 date +%Y%m%d""%H%M%S)) \
+    Current_VERSION_STRING=`git describe --tags --exact-match --abbrev=0` \
+    && Current_VERSION_NUMBER=${Current_VERSION#*v} \
     && git submodule update --init \
     && git add . \
-    && git commit -m "build at ${current_beijign_time}" \
+    && git commit -m "build at ${NEW_VERSION}" \
     && git push \
-    && git tag build_${current_beijign_time} \
-    && git push --tags
+    && git tag v$((${Current_VERSION_NUMBER}+1)) \
+    && git push --tags \
+    && git tag | grep "build"| xargs git tag -d 
 }
 
 Check () 
