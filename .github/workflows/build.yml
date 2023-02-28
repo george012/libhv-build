@@ -14,18 +14,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Create Release
-        id: create_release
-        uses: actions/create-release@v1.0.0
+        id: step_create_release
+        uses: ncipollo/release-action@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tag_name: ${{ github.ref }}
-          release_name: Release ${{ github.ref }}
-          body: |
-            Automatic release created by GitHub Actions.
-          draft: false
-          prerelease: false
-          upload_url: ${{ steps.step_upload_url.outputs.upload_url }}
 
   build-linux:
     name: build-linux
@@ -142,16 +134,18 @@ jobs:
       - name: Install Android NDK
         run: |
           mkdir -p $HOME/android-sdk/ndk
-          wget -q https://dl.google.com/android/repository/android-ndk-r21e-linux-x86_64.zip -O ndk.zip
+          wget -q https://dl.google.com/android/repository/android-ndk-r25c-linux.zip -O ndk.zip
           unzip -q ndk.zip -d $HOME/android-sdk/ndk
           rm ndk.zip
+          export ANDROID_NDK_HOME=$HOME/android-sdk/ndk/android-ndk-r25c
+          export PATH=$PATH:$ANDROID_NDK_HOME
 
       - name: Build dynamic library for Android
         run: |
           cd libhv
           mkdir -p build-android
           cd build-android
-          cmake .. -DCMAKE_TOOLCHAIN_FILE=$HOME/android-sdk/ndk/cmake/android.toolchain.cmake -DANDROID_ABI=arm64-v8a -DANDROID_NATIVE_API_LEVEL=21 -DANDROID_STL=c++_shared
+          cmake .. -DCMAKE_TOOLCHAIN_FILE=$HOME/android-sdk/ndk/build/cmake/android.toolchain.cmake -DANDROID_ABI=arm64-v8a -DANDROID_NATIVE_API_LEVEL=21 -DANDROID_STL=c++_shared
           make
           zip -j libhv_android_arm64-v8a.zip libhv.so
 
