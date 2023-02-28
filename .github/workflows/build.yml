@@ -25,10 +25,8 @@ jobs:
           UPLOAD_URL: ${{ steps.step_create_release.outputs.upload_url }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - run: |
-          echo upload_url=${{ steps.step_create_release.outputs.upload_url }}
-          echo html_url=${{ steps.step_create_release.outputs.html_url }}
-          echo id=${{ steps.step_create_release.outputs.id }}
-          # echo UPLOAD_URL=${{ env.UPLOAD_URL }}
+          echo "UPLOAD_URL=${{ steps.step_create_release.outputs.html_url }}" >> $GITHUB_ENV
+          echo UPLOAD_URL=${{ env.UPLOAD_URL }}
 
   # build-linux:
   #   name: build-linux
