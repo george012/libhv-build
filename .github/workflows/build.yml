@@ -28,7 +28,7 @@ jobs:
       - name: Check Old Version
         run: |
           APP_VERSION=$(echo ${GITHUB_REF} | rev | cut -d'/' -f 1 | rev ) \
-          && echo APP_OLD_VERSION=$((${APP_VERSION:1}-2)) >> ${GITHUB_ENV}
+          && echo APP_OLD_VERSION=v$((${APP_VERSION:1}-2)) >> ${GITHUB_ENV}
 
       - name: Delete Old Version
         run: |
