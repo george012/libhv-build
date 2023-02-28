@@ -10,11 +10,12 @@ on:
 
 jobs:
   create-release:
-    name: Create Release
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
-      - name: Create Release
-        uses: ncipollo/release-action@v1
+    - uses: actions/checkout@v3
+    - uses: ncipollo/release-action@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -22,8 +23,10 @@ jobs:
     name: build-linux
     needs: create-release
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           submodules: 'recursive'
 
@@ -62,8 +65,10 @@ jobs:
     name: build-windows
     needs: create-release
     runs-on: windows-latest
+    permissions:
+      contents: write
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           submodules: 'recursive'
 
@@ -94,8 +99,10 @@ jobs:
     name: build-apple
     needs: create-release
     runs-on: macos-latest
+    permissions:
+      contents: write
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           submodules: 'recursive'
 
@@ -120,8 +127,10 @@ jobs:
     name: build-android
     needs: create-release
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           submodules: 'recursive'
 
