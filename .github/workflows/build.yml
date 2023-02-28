@@ -21,7 +21,6 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2
-
       - name: Install dependencies
         if: matrix.os != 'android-latest' && matrix.os != 'ios-latest'
         run: |
