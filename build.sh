@@ -5,6 +5,7 @@ Build ()
     kas=`git rev-list --tags --max-count=1` \
     && Current_VERSION_STRING=`git describe --tags $kas` \
     && Current_VERSION_NUMBER=${Current_VERSION#*v} \
+    && echo ddddd$Current_VERSION_NUMBER \
     && git submodule update --init \
     && git add . \
     && git commit -m "v$((${Current_VERSION_NUMBER}+1))" \
