@@ -17,14 +17,13 @@ jobs:
       - name: Create Release
         id: step_create_release
         uses: ncipollo/release-action@v1
+        run: |
+          echo "${{ steps.step_create_release.outputs.upload_url }}" >> "${{ env.CUSTOM_UPLOAD_URL }}"
+          echo UPLOAD_URL=${{ env.CUSTOM_UPLOAD_URL }}
         with:
           allowUpdates: true
         env:
-          UPLOAD_URL: ${{ steps.step_create_release.outputs.upload_url }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      - run: |
-          echo "${{ steps.step_create_release.outputs.upload_url }}" >> "${{ env.CUSTOM_UPLOAD_URL }}"
-          echo UPLOAD_URL=${{ env.CUSTOM_UPLOAD_URL }}
 
   # build-linux:
   #   name: build-linux
