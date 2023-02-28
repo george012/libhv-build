@@ -1,142 +1,83 @@
-name: build
+name: Cross-platform Build and Release
 
 env:
   ProductName: libhv
 
 on:
   push:
-    tags:
-      - 'build_*'
+     tags:
+      - build_*
 
 jobs:
-  CreateRelease:
+  build:
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        arch: [x64, arm64]
     steps:
-      - uses: actions/checkout@main
-      - uses: ncipollo/release-action@main
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
+    - uses: actions/checkout@v2
+    - name: Set up QEMU
+      if: matrix.os == 'windows-latest'
+      uses: docker/setup-qemu-action@v1
 
-      - name: Echo Upload Url
-        run: |
-          echo ${{ steps.create_release.outputs.upload_url }}
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v1
 
-  build-linux:
-    name: build-linux
-    runs-on: ubuntu-latest
-    needs: CreateRelease
-    steps:
-      - uses: actions/checkout@v3
+    - name: Login to DockerHub
+      uses: docker/login-action@v1
+      with:
+        username: ${{ secrets.DOCKER_USERNAME }}
+        password: ${{ secrets.DOCKER_PASSWORD }}
 
-      - name: Make Release Dir
-        run: |
-          mkdir -p release
+    - name: Build and push Docker image
+      uses: docker/build-push-action@v2
+      with:
+        context: .
+        push: true
+        platforms: ${{ matrix.os }}/${{ matrix.arch }}
+        tags: your-dockerhub-username/libhv:${{ matrix.os }}-${{ matrix.arch }}
 
-      - name: build
-        run: |
-          git submodule update --init \
-          && cd libhv \
-          && sudo apt update \
-          && sudo apt install libssl-dev libnghttp2-dev \
-          && ./configure --with-openssl --with-nghttp2 \
-          && make libhv evpp \
-          && mkdir -p libhv_linux/include \
-          && mkdir -p libhv_linux/lib \
-          && mv ./include/hv/* libhv_linux/include \
-          && mv ./lib/* libhv_linux/lib \
-          && mv ./libhv_linux ../release
+    - name: Download the Docker image
+      uses: docker/setup-buildx-action@v1
+    - name: Build dynamic library for Linux/MacOS/Windows
+      if: matrix.os != 'android-latest' && matrix.os != 'ios-latest'
+      run: |
+        docker run --rm -v $(pwd):/home/hv my-dockerhub-username/libhv:${{ matrix.os }}-${{ matrix.arch }} /bin/bash -c "cd /home/hv && cmake -B build && cmake --build build"
 
-      - name: test
-        run: |
-          cd libhv \
-          && make check \
-          && make run-unittest
+    - name: Upload dynamic library as release asset
+      if: matrix.os != 'android-latest' && matrix.os != 'ios-latest'
+      uses: actions/upload-release-asset@v1
+      with:
+        upload_url: ${{ github.event.release.upload_url }}
+        asset_path: ./build/libhv.so # Update file name for Windows or MacOS if needed
+        asset_name: libhv_${{ matrix.os }}_${{ matrix.arch }}.so # Update file extension for Windows or MacOS if needed
+        asset_content_type: application/x-sharedlib
+        token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Upload release binaries
-        uses: alexellis/upload-assets@master
-        env:
-          GITHUB_TOKEN: ${{ github.token }}
-        with:
-          asset_paths: '["./release/*"]'
+    - name: Build dynamic library for Android
+      if: matrix.os == 'ubuntu-latest'
+      run: |
+        docker run --rm -v $(pwd):/home/hv my-dockerhub-username/libhv:ubuntu-latest-x64 /bin/bash -c "cd /home/hv && ./build_android.sh"
 
-  build-windows:
-    name: build-windows
-    runs-on: windows-latest
-    needs: CreateRelease
-    steps:
-      - uses: actions/checkout@v3
+    - name: Build dynamic library for iOS
+      if: matrix.os == 'macos-latest'
+      run: |
+        docker run --rm -v $(pwd):/home/hv my-dockerhub-username/libhv:macos-latest-x64 /bin/bash -c "cd /home/hv && ./build_ios.sh"
 
-      - name: Make Release Dir
-        run: |
-          mkdir -p release
-
-      - name: build
-        run: |
-          git submodule update --init && cd libhv && mkdir cmake-build-win64 && cd cmake-build-win64 && cmake .. -G "Visual Studio 17 2022" -A x64 && cmake --build . && mkdir -p libhv_windows/include && mkdir -p libhv_windows/lib && mv ./include/hv/* libhv_windows/include && mv ./bin/* libhv_windows/lib && mv ./libhv_windows ../../release
-
-      - name: Upload Release Asset
-        id: upload-release-asset 
-        uses: actions/upload-release-asset@latest
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ github.event.release.upload_url }}
-          asset_path: ./release/*
-          asset_content_type: application/zip
-
-  build-apple:
-    name: build-apple
-    runs-on: macos-latest
-    needs: CreateRelease
-    steps:
-      - uses: actions/checkout@v3
-
-      - name: Make Release Dir
-        run: |
-          mkdir -p release
-
-      - name: build-mac
-        run: |
-          git submodule update --init \
-          && cd libhv \
-          && ./configure \
-          && make libhv evpp examples unittest \
-          && mkdir -p libhv_mac/include \
-          && mkdir -p libhv_mac/lib \
-          && mv ./include/hv/* libhv_mac/include \
-          && mv ./lib/* libhv_mac/lib \
-          && mv ./libhv_mac ../release
-
-      - name: build-ios
-        run: |
-          git submodule update --init \
-          && cd libhv \
-          && mkdir cmake-build-ios \
-          && cd cmake-build-ios \
-          && cmake .. -G Xcode -DCMAKE_TOOLCHAIN_FILE=../cmake/ios.toolchain.cmake -DPLATFORM=OS -DDEPLOYMENT_TARGET=9.0 -DARCHS="arm64" \
-          && cmake --build . --target hv_static --config Release \
-          && mkdir -p libhv_ios/include \
-          && mkdir -p libhv_ios/lib \
-          && mv ./include/hv/* libhv_ios/include \
-          && mv ./lib/* libhv_ios/lib \
-          && mv ./libhv_ios ../release
-
-      # - name: Upload Release Asset
-      #   id: upload-release-asset 
-      #   uses: actions/upload-release-asset@latest
-      #   env:
-      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      #   with:
-      #     upload_url: ${{ github.event.release.upload_url }}
-      #     asset_path: ./release/*
-      #     asset_content_type: application/zip
-
-      - name: Upload release binaries
-        uses: alexellis/upload-assets@master
-        env:
-          GITHUB_TOKEN: ${{ github.token }}
-        with:
-          asset_paths: '["./release/*"]'
-#          asset_paths: '["./bin/release-it-darwin", "./bin/release-it-amd64", "./bin/release-it-arm", "./bin/release-it-arm64", "./bin/release-it.exe"]'
+    - name: Create release
+          if: matrix.os == 'ubuntu-latest' && matrix.arch == 'x64'
+          uses: softprops/action-gh-release@v1
+          with:
+            name: Release ${{ github.ref }}
+            tag_name: ${{ github.ref }}
+            body: Automated release ${{ github.ref }}
+            assets: |
+              build/libhv_linux_x64.so
+              build/libhv_macos_x64.dylib
+              build/libhv_windows_x64.dll
+              build/libhv_android_arm64-v8a.so
+              build/libhv_ios_arm64.so
+            draft: false
+            prerelease: false
+            token: ${{ secrets.GITHUB_TOKEN }}
