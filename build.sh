@@ -2,7 +2,8 @@
 ProductName=libhv
 Build () 
 {
-    Current_VERSION_STRING=`git describe --tags --exact-match --abbrev=0` \
+    kas=`git rev-list --tags --max-count=1` \
+    && Current_VERSION_STRING=`git describe --tags $kas` \
     && Current_VERSION_NUMBER=${Current_VERSION#*v} \
     && git submodule update --init \
     && git add . \
