@@ -1,5 +1,8 @@
 name: Cross-platform Build and Release
 
+env:
+  ProductName: libhv
+
 on:
   push:
     tags:
@@ -7,7 +10,7 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
     strategy:
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
@@ -17,51 +20,33 @@ jobs:
       - uses: actions/checkout@v2
 
       - name: Install dependencies
-        if: matrix.os != 'android-latest' && matrix.os != 'ios-latest'
-        run: |
-          if [ "$matrix.os" == "ubuntu-latest" ]; then
-            sudo apt-get update -y && sudo apt-get install -y build-essential cmake
-          elif [ "$matrix.os" == "macos-latest" ]; then
-            brew install cmake
-          elif [ "$matrix.os" == "windows-latest" ]; then
-            choco install make
-            choco install cmake
-          fi
+        if: matrix.os == 'ubuntu-latest'
+        run: sudo apt-get update -y && sudo apt-get install -y build-essential cmake
 
       - name: Build dynamic library
         if: matrix.os != 'android-latest' && matrix.os != 'ios-latest'
-        run: |
-          mkdir -p build
-          cd build
-          cmake ..
-          make
+        run: make && make install
 
-      - name: Upload dynamic library as release asset
+      - name: Upload dynamic library
         if: matrix.os != 'android-latest' && matrix.os != 'ios-latest'
         uses: actions/upload-release-asset@v1
         with:
           upload_url: ${{ github.event.release.upload_url }}
-          asset_path: ./build/libhv.so # Update file name for Windows or MacOS if needed
+          asset_path: |
+            /usr/local/lib/libhv.so # Update file name for Windows or MacOS if needed
+            /usr/local/lib/libhv.dylib # Update file name for Linux or Windows if needed
+            /usr/local/lib/libhv.dll # Update file name for Linux or MacOS if needed
           asset_name: libhv_${{ matrix.os }}_${{ matrix.arch }}.so # Update file extension for Windows or MacOS if needed
           asset_content_type: application/x-sharedlib
           token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build dynamic library for Android
         if: matrix.os == 'ubuntu-latest'
-        run: |
-          cd android
-          ./gradlew assembleRelease
+        run: make android
 
       - name: Build dynamic library for iOS
         if: matrix.os == 'macos-latest'
-        run: |
-          cd ios
-          xcodebuild -project hv.xcodeproj -scheme hv -sdk iphoneos -configuration Release build
-          xcodebuild -project hv.xcodeproj -scheme hv -sdk iphonesimulator -configuration Release build
-          cp -R ./build/Release-iphoneos/hv.framework .
-
-          # Merge the two architectures into a single .framework file
-          lipo -create -output hv.framework/hv ./build/Release-iphoneos/hv.framework/hv ./build/Release-iphonesimulator/hv.framework/hv
+        run: make ios
 
       - name: Create release
         if: matrix.os == 'ubuntu-latest' && matrix.arch == 'x64'
@@ -71,11 +56,11 @@ jobs:
           tag_name: ${{ github.ref }}
           body: Automated release ${{ github.ref }}
           assets: |
-            build/libhv_linux_x64.so
-            build/libhv_macos_x64.dylib
-            build/libhv_windows_x64.dll
-            build/libhv_android_arm64-v8a.so
-            build/libhv_ios_arm64.so
+            /usr/local/lib/libhv_linux_x64.so
+            /usr/local/lib/libhv_macos_x64.dylib
+            /usr/local/lib/libhv_windows_x64.dll
+            /usr/local/lib/libhv_android_arm64-v8a.so
+            /usr/local/lib/libhv_ios_arm64.so
           draft: false
           prerelease: false
           token: ${{ secrets.GITHUB_TOKEN }}
