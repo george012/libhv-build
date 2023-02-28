@@ -13,7 +13,7 @@ jobs:
     name: build-linux
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
 
       - name: install dependencies
         run: |
@@ -36,7 +36,7 @@ jobs:
     name: build-windows
     runs-on: windows-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
 
       - name: install dependencies
         run: |
@@ -53,7 +53,7 @@ jobs:
     name: build-apple
     runs-on: macos-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
 
       - name: build
         run: |
@@ -64,7 +64,7 @@ jobs:
     name: build-android
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
 
       - name: install dependencies
         run: |
