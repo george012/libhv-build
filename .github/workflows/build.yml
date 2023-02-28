@@ -15,9 +15,8 @@ jobs:
     permissions:
       contents: write
     steps:
-      - name: Create Release
-        id: step_create_release
-        uses: ncipollo/release-action@v1
+      - uses: actions/checkout@v3
+      - uses: ncipollo/release-action@v1
         with:
           allowUpdates: true
         env:
@@ -27,6 +26,7 @@ jobs:
           echo upload_url=${{ steps.step_create_release.outputs.upload_url }}
           echo html_url=${{ steps.step_create_release.outputs.html_url }}
           echo id=${{ steps.step_create_release.outputs.id }}
+          echo UPLOAD_URL=${{ env.UPLOAD_URL }}
 
   # build-linux:
   #   name: build-linux
