@@ -16,6 +16,7 @@ Settings -> Actions -> General -> Workflow permissions -> Read and write permiss
 
 # 未完成问题。
 * 目前Linux编译不通过
+尝试一下
 
 # 删除所有Tags
 *   合并删除
