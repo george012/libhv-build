@@ -9,58 +9,89 @@ on:
       - build_*
 
 jobs:
-  build:
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        os: [ubuntu-latest, macos-latest, windows-latest]
-        arch: [x64, arm64]
-
+  build-linux:
+    name: build-linux
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
 
-      - name: Install dependencies
-        if: matrix.os == 'ubuntu-latest'
-        run: sudo apt-get update -y && sudo apt-get install -y build-essential cmake
+      - name: install dependencies
+        run: |
+          sudo apt update
+          sudo apt install libssl-dev libnghttp2-dev
 
-      - name: Build dynamic library
-        if: matrix.os != 'android-latest' && matrix.os != 'ios-latest'
-        run: make && make install
+      - name: build
+        run: |
+          mkdir build && cd build
+          cmake .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=./install -DBUILD_SHARED_LIBS=ON -DCMAKE_POSITION_INDEPENDENT_CODE=ON
+          make -j$(nproc) VERBOSE=1
+          make install
 
-      - name: Upload dynamic library
-        if: matrix.os != 'android-latest' && matrix.os != 'ios-latest'
+      - name: test
+        run: |
+          make check
+          make run-unittest
+
+  build-windows:
+    name: build-windows
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: install dependencies
+        run: |
+          choco install -y openssl.light
+
+      - name: build
+        run: |
+          mkdir cmake-build-win64
+          cd cmake-build-win64
+          cmake .. -G "Visual Studio 17 2022" -A x64
+          cmake --build .
+
+  build-apple:
+    name: build-apple
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: build
+        run: |
+          ./configure
+          make libhv evpp examples unittest
+
+  build-android:
+    name: build-android
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: install dependencies
+        run: |
+          sudo apt update
+          sudo apt install -y build-essential cmake git
+          sudo apt install -y wget zip unzip tar
+
+      - name: Install Android NDK
+        run: |
+          mkdir -p $HOME/android-sdk/ndk
+          wget -q https://dl.google.com/android/repository/android-ndk-r21e-linux-x86_64.zip -O ndk.zip
+          unzip -q ndk.zip -d $HOME/android-sdk/ndk
+          rm ndk.zip
+
+      - name: Build dynamic library for Android
+        run: |
+          mkdir -p build-android
+          cd build-android
+          cmake .. -DCMAKE_TOOLCHAIN_FILE=../cmake/android.toolchain.cmake -DANDROID_ABI=arm64-v8a -DANDROID_NATIVE_API_LEVEL=21
+          make
+          zip -j libhv_android_arm64-v8a.zip libhv.so
+
+      - name: Upload the .zip file as a release asset
         uses: actions/upload-release-asset@v1
         with:
           upload_url: ${{ github.event.release.upload_url }}
-          asset_path: |
-            /usr/local/lib/libhv.so # Update file name for Windows or MacOS if needed
-            /usr/local/lib/libhv.dylib # Update file name for Linux or Windows if needed
-            /usr/local/lib/libhv.dll # Update file name for Linux or MacOS if needed
-          asset_name: libhv_${{ matrix.os }}_${{ matrix.arch }}.so # Update file extension for Windows or MacOS if needed
-          asset_content_type: application/x-sharedlib
-          token: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Build dynamic library for Android
-        if: matrix.os == 'ubuntu-latest'
-        run: make android
-
-      - name: Build dynamic library for iOS
-        if: matrix.os == 'macos-latest'
-        run: make ios
-
-      - name: Create release
-        if: matrix.os == 'ubuntu-latest' && matrix.arch == 'x64'
-        uses: softprops/action-gh-release@v1
-        with:
-          name: Release ${{ github.ref }}
-          tag_name: ${{ github.ref }}
-          body: Automated release ${{ github.ref }}
-          assets: |
-            /usr/local/lib/libhv_linux_x64.so
-            /usr/local/lib/libhv_macos_x64.dylib
-            /usr/local/lib/libhv_windows_x64.dll
-            /usr/local/lib/libhv_android_arm64-v8a.so
-            /usr/local/lib/libhv_ios_arm64.so
-          draft: false
-          prerelease: false
+          asset_path: ./build-android/libhv_android_arm64-v8a.zip
+          asset_name: libhv_android_arm64-v8a.zip
+          asset_content_type: application/octet-stream
           token: ${{ secrets.GITHUB_TOKEN }}
