@@ -26,10 +26,10 @@ Settings -> Actions -> General -> Workflow permissions -> Read and write permiss
 
 *   删除远端
     ```
-    git tag|grep "test"|xargs git push origin --delete tag
+    git tag|grep "build"|xargs git push origin --delete tag
     ```
 
 *   删除本地
     ```
-    git tag|grep "test"|xargs git tag -d 
+    git tag|grep "build"|xargs git tag -d 
     ```
