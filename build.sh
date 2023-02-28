@@ -6,11 +6,11 @@ Build ()
     && Current_VERSION_NUMBER=${Current_VERSION#*v} \
     && git submodule update --init \
     && git add . \
-    && git commit -m "build at ${NEW_VERSION}" \
+    && git commit -m "v$((${Current_VERSION_NUMBER}+1))" \
     && git push \
     && git tag v$((${Current_VERSION_NUMBER}+1)) \
     && git push --tags \
-    && git tag | grep "build"| xargs git tag -d 
+    && git tag -d v$((${Current_VERSION_NUMBER}-1))
 }
 
 Check () 
