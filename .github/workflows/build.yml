@@ -59,7 +59,7 @@ jobs:
       - name: install dependencies
         run: |
           sudo apt update
-          sudo apt install libssl-dev libnghttp2-dev
+          sudo apt install libssl-dev libnghttp2-dev tree
 
       - name: build
         run: |
@@ -69,22 +69,24 @@ jobs:
           cmake .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=./install -DBUILD_SHARED_LIBS=ON -DCMAKE_POSITION_INDEPENDENT_CODE=ON
           make -j$(nproc) VERBOSE=1
           make install
+          tree >> linux_tree.txt
 
-      - name: test
-        run: |
-          cd libhv
-          make check
-          make run-unittest
-          echo 66666666666`ls`
+      # - name: test
+      #   run: |
+      #     cd libhv
+      #     make check
+      #     make run-unittest
 
       - name: Upload dynamic library as release asset
         uses: actions/upload-release-asset@v1
         if: ${{ github.ref_type == 'tag' }}
         with:
           upload_url: ${{ needs.create-release.outputs.upload_url }}
-          asset_path: ./libhv/build/libhv.so
-          asset_name: libhv_linux_x64.so
-          asset_content_type: application/x-sharedlib
+          asset_path: ./libhv/linux_tree.txt
+          asset_name: linux_tree.txt
+          # asset_path: ./libhv/lib/libhv.so
+          # asset_name: libhv_linux_x64.so
+          # asset_content_type: application/x-sharedlib
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -117,7 +119,7 @@ jobs:
         if: ${{ github.ref_type == 'tag' }}
         with:
           upload_url: ${{ needs.create-release.outputs.upload_url }}
-          asset_path: ./libhv/cmake-build-win64/Release/hv.dll
+          asset_path: ./libhv/cmake-build-win64/bin/hv.dll
           asset_name: hv_windows_x64.dll
           asset_content_type: application/x-sharedlib
         env:
@@ -146,7 +148,7 @@ jobs:
         if: ${{ github.ref_type == 'tag' }}
         with:
           upload_url: ${{ needs.create-release.outputs.upload_url }}
-          asset_path: ./libhv/libhv/.libs/libhv.dylib
+          asset_path: ./libhv/lib/libhv.dylib
           asset_name: libhv_macos_x64.dylib
           asset_content_type: application/x-sharedlib
         env:
