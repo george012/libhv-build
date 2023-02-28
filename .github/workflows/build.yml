@@ -23,9 +23,9 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - run: |
-          echo "CUSTOM_UPLOAD_URL=${{ steps.step_create_release.outputs.upload_url }}" >> ${{ env.UPLOAD_URL }}
-
+          echo "CUSTOM_UPLOAD_URL=${{ steps.step_create_release.outputs.upload_url }}" >> $GITHUB_ENV
           echo UPLOAD_URL=${{ env.CUSTOM_UPLOAD_URL }}
+
   # build-linux:
   #   name: build-linux
   #   needs: create-release
