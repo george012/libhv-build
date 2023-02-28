@@ -2,7 +2,6 @@ name: Cross-platform Build and Release
 
 env:
   ProductName: libhv
-  UPLOAD_URL: ''
 
 on:
   push:
@@ -12,6 +11,8 @@ on:
 jobs:
   create-release:
     runs-on: ubuntu-latest
+    outputs:
+      upload_url: ${{ steps.step_create_release.outputs.upload_url }}
     steps:
       - uses: actions/checkout@v3
       - name: Create Release
@@ -22,15 +23,6 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Set UPLOAD_URL in env
-        run: |
-          echo "UPLOAD_URL=${{ steps.step_create_release.outputs.upload_url }}" >> ${{ env.UPLOAD_URL }}
-      - name: Output UPLOAD_URL
-        run: |
-          echo "UPLOAD_URL=${{ env.UPLOAD_URL }}"
-        env:
-          UPLOAD_URL: ${{ env.UPLOAD_URL }}
-
   build-linux:
     name: build-linux
     needs: create-release
@@ -38,12 +30,6 @@ jobs:
     permissions:
       contents: write
     steps:
-      - name: Output UPLOAD_URL
-        run: |
-          echo "UPLOAD_URL=${UPLOAD_URL}"
-        env:
-          UPLOAD_URL: ${{ env.UPLOAD_URL }}
-
       - uses: actions/checkout@v3
         with:
           submodules: 'recursive'
@@ -55,7 +41,7 @@ jobs:
 
       - name: build
         run: |
-          echo upUrl===${{ env.UPLOAD_URL }}
+          echo upUrl===${{ needs.create-release.outputs.upload_url }}
           cd libhv
           mkdir build && cd build
           cmake .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=./install -DBUILD_SHARED_LIBS=ON -DCMAKE_POSITION_INDEPENDENT_CODE=ON
@@ -72,12 +58,11 @@ jobs:
         uses: actions/upload-release-asset@v1
         if: ${{ github.ref_type == 'tag' }}
         with:
-          upload_url: ${{ env.UPLOAD_URL }}
+          upload_url: ${{ needs.create-release.outputs.upload_url }}
           asset_path: ./libhv/build/libhv.so
           asset_name: libhv_linux_x64.so
           asset_content_type: application/x-sharedlib
         env:
-          UPLOAD_URL: ${{ env.UPLOAD_URL }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   build-windows:
@@ -87,12 +72,6 @@ jobs:
     permissions:
       contents: write
     steps:
-      - name: Output UPLOAD_URL
-        run: |
-          echo "UPLOAD_URL=${UPLOAD_URL}"
-        env:
-          UPLOAD_URL: ${{ env.UPLOAD_URL }}
-
       - uses: actions/checkout@v3
         with:
           submodules: 'recursive'
@@ -113,12 +92,11 @@ jobs:
         uses: actions/upload-release-asset@v1
         if: ${{ github.ref_type == 'tag' }}
         with:
-          upload_url: ${{ env.UPLOAD_URL }}
+          upload_url: ${{ needs.create-release.outputs.upload_url }}
           asset_path: ./libhv/cmake-build-win64/Release/hv.dll
           asset_name: hv_windows_x64.dll
           asset_content_type: application/x-sharedlib
         env:
-          UPLOAD_URL: ${{ env.UPLOAD_URL }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   build-apple:
@@ -142,12 +120,11 @@ jobs:
         uses: actions/upload-release-asset@v1
         if: ${{ github.ref_type == 'tag' }}
         with:
-          upload_url: ${{ env.UPLOAD_URL }}
+          upload_url: ${{ needs.create-release.outputs.upload_url }}
           asset_path: ./libhv/libhv/.libs/libhv.dylib
           asset_name: libhv_macos_x64.dylib
           asset_content_type: application/x-sharedlib
         env:
-          UPLOAD_URL: ${{ env.UPLOAD_URL }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   build-android:
@@ -189,10 +166,9 @@ jobs:
         uses: actions/upload-release-asset@v1
         if: ${{ github.ref_type == 'tag' }}
         with:
-          upload_url: ${{ env.UPLOAD_URL }}
+          upload_url: ${{ needs.create-release.outputs.upload_url }}
           asset_path: ./libhv/build-android/libhv_android_arm64-v8a.zip
           asset_name: libhv_android_arm64-v8a.zip
           asset_content_type: application/octet-stream
         env:
-          UPLOAD_URL: ${{ env.UPLOAD_URL }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
