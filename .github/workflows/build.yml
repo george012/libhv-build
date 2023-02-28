@@ -72,11 +72,11 @@ jobs:
           lipo -create -output hv.framework/hv ./build/Release-iphoneos/hv.framework/hv ./build/Release-iphonesimulator/hv.framework/hv
 
       - name: Upload the .framework file as a release asset
-            if: matrix.os == 'macos-latest'
-            uses: actions/upload-release-asset@v1
-            with:
-              upload_url: ${{ github.event.release.upload_url }}
-              asset_path: ./ios/hv.framework
-              asset_name: hv.framework
-              asset_content_type: application/octet-stream
-              token: ${{ secrets.GITHUB_TOKEN }}
+        if: matrix.os == 'macos-latest'
+        uses: actions/upload-release-asset@v1
+        with:
+          upload_url: ${{ github.event.release.upload_url }}
+          asset_path: ./ios/hv.framework
+          asset_name: hv.framework
+          asset_content_type: application/octet-stream
+          token: ${{ secrets.GITHUB_TOKEN }}
