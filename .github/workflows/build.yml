@@ -2,6 +2,7 @@ name: Cross-platform Build and Release
 
 env:
   ProductName: libhv
+  CUSTOM_UPLOAD_URL: ''
 
 on:
   push:
@@ -22,25 +23,26 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - run: |
-          echo CUSTOM_UPLOAD_URL=${{ steps.step_create_release.outputs.upload_url }} >> ${GITHUB_ENV}
-          echo CUSTOM_UPLOAD_URL=${{ env.CUSTOM_UPLOAD_URL }}
+          echo "CUSTOM_UPLOAD_URL=${{ steps.step_create_release.outputs.upload_url }}"
+        env:
+          CUSTOM_UPLOAD_URL: ${{ steps.step_create_release.outputs.upload_url }}
 
-  # build-linux:
-  #   name: build-linux
-  #   needs: create-release
-  #   runs-on: ubuntu-latest
-  #   permissions:
-  #     contents: write
-  #   steps:
-  #     - uses: actions/checkout@v3
-  #       with:
-  #         submodules: 'recursive'
+  build-linux:
+    name: build-linux
+    needs: create-release
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          submodules: 'recursive'
 
-  #     - name: install dependencies
-  #       run: |
-  #         sudo apt update
-  #         sudo apt install libssl-dev libnghttp2-dev
-
+      - name: install dependencies
+        run: |
+          sudo apt update
+          sudo apt install libssl-dev libnghttp2-dev
+          echo aoooooo=${{ env.CUSTOM_UPLOAD_URL }}
   #     - name: build
   #       run: |
   #         echo upUrl===${{ env.UPLOAD_URL }}
