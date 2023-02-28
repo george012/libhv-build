@@ -24,10 +24,10 @@ jobs:
 
       - name: Set UPLOAD_URL in env
         run: |
-          echo "UPLOAD_URL=${{ steps.step_create_release.outputs.upload_url }}" >> $GITHUB_ENV
+          echo "UPLOAD_URL=${{ steps.step_create_release.outputs.upload_url }}" >> ${{ env.UPLOAD_URL }}
       - name: Output UPLOAD_URL
         run: |
-          echo "UPLOAD_URL=${UPLOAD_URL}"
+          echo "UPLOAD_URL=${{ env.UPLOAD_URL }}"
         env:
           UPLOAD_URL: ${{ env.UPLOAD_URL }}
 
