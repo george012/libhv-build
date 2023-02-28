@@ -5,80 +5,78 @@ env:
 
 on:
   push:
-     tags:
+    tags:
       - build_*
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
     strategy:
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
         arch: [x64, arm64]
+        file_extension:
+          x64: [so, dylib, dll]
+          arm64: [so, dylib, dll]
+
     steps:
-    - uses: actions/checkout@v2
-    - name: Set up QEMU
-      if: matrix.os == 'windows-latest'
-      uses: docker/setup-qemu-action@v1
+      - uses: actions/checkout@v2
 
-    - name: Set up Docker Buildx
-      uses: docker/setup-buildx-action@v1
+      - name: Install dependencies
+        if: matrix.os != 'android-latest' && matrix.os != 'ios-latest'
+        run: |
+          if [ "$matrix.os" == "ubuntu-latest" ]; then
+            sudo apt-get update -y && sudo apt-get install -y cmake
+          elif [ "$matrix.os" == "macos-latest" ]; then
+            brew install cmake
+          elif [ "$matrix.os" == "windows-latest" ]; then
+            choco install cmake
+          fi
 
-    - name: Login to DockerHub
-      uses: docker/login-action@v1
-      with:
-        registry: ghcr.io
-        username: ${{ github.actor }}
-        password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Build dynamic library
+        if: matrix.os != 'android-latest' && matrix.os != 'ios-latest'
+        run: |
+          mkdir -p build
+          cd build
+          cmake ..
+          cmake --build .
 
-    - name: Build and push Docker image
-      uses: docker/build-push-action@v2
-      with:
-        context: .
-        push: true
-        platforms: ${{ matrix.os }}/${{ matrix.arch }}
-        tags: your-dockerhub-username/libhv:${{ matrix.os }}-${{ matrix.arch }}
+      - name: Upload dynamic library
+        if: matrix.os != 'android-latest' && matrix.os != 'ios-latest'
+        uses: actions/upload-release-asset@v1
+        with:
+          upload_url: ${{ github.event.release.upload_url }}
+          asset_path: |
+            ./build/libhv.so # Update file name for Windows or MacOS if needed
+            ./build/libhv.dylib # Update file name for Linux or Windows if needed
+            ./build/libhv.dll # Update file name for Linux or MacOS if needed
+          asset_name: libhv_${{ matrix.os }}_${{ matrix.arch }}.${{ matrix.file_extension }}
+          asset_content_type: application/x-sharedlib
+          token: ${{ secrets.GITHUB_TOKEN }}
 
-    - name: Download the Docker image
-      uses: docker/setup-buildx-action@v1
-    - name: Build dynamic library for Linux/MacOS/Windows
-      if: matrix.os != 'android-latest' && matrix.os != 'ios-latest'
-      run: |
-        docker run --rm -v $(pwd):/home/hv my-dockerhub-username/libhv:${{ matrix.os }}-${{ matrix.arch }} /bin/bash -c "cd /home/hv && cmake -B build && cmake --build build"
+      - name: Build dynamic library for Android
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          cd android
+          ./gradlew assembleRelease
 
-    - name: Upload dynamic library as release asset
-      if: matrix.os != 'android-latest' && matrix.os != 'ios-latest'
-      uses: actions/upload-release-asset@v1
-      with:
-        upload_url: ${{ github.event.release.upload_url }}
-        asset_path: ./build/libhv.so # Update file name for Windows or MacOS if needed
-        asset_name: libhv_${{ matrix.os }}_${{ matrix.arch }}.so # Update file extension for Windows or MacOS if needed
-        asset_content_type: application/x-sharedlib
-        token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Build dynamic library for iOS
+        if: matrix.os == 'macos-latest'
+        run: |
+          cd ios
+          xcodebuild -project hv.xcodeproj -scheme hv -sdk iphoneos -configuration Release build
+          xcodebuild -project hv.xcodeproj -scheme hv -sdk iphonesimulator -configuration Release build
+          cp -R ./build/Release-iphoneos/hv.framework .
 
-    - name: Build dynamic library for Android
-      if: matrix.os == 'ubuntu-latest'
-      run: |
-        docker run --rm -v $(pwd):/home/hv my-dockerhub-username/libhv:ubuntu-latest-x64 /bin/bash -c "cd /home/hv && ./build_android.sh"
+          # Merge the two architectures into a single .framework file
+          lipo -create -output hv.framework/hv ./build/Release-iphoneos/hv.framework/hv ./build/Release-iphonesimulator/hv.framework/hv
 
-    - name: Build dynamic library for iOS
-      if: matrix.os == 'macos-latest'
-      run: |
-        docker run --rm -v $(pwd):/home/hv my-dockerhub-username/libhv:macos-latest-x64 /bin/bash -c "cd /home/hv && ./build_ios.sh"
-
-    - name: Create release
-      if: matrix.os == 'ubuntu-latest' && matrix.arch == 'x64'
-      uses: softprops/action-gh-release@v1
-      with:
-        name: Release ${{ github.ref }}
-        tag_name: ${{ github.ref }}
-        body: Automated release ${{ github.ref }}
-        assets: |
-          build/libhv_linux_x64.so
-          build/libhv_macos_x64.dylib
-          build/libhv_windows_x64.dll
-          build/libhv_android_arm64-v8a.so
-          build/libhv_ios_arm64.so
-        draft: false
-        prerelease: false
-        token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Upload the .framework file as a release asset
+            if: matrix.os == 'macos-latest'
+            uses: actions/upload-release-asset@v1
+            with:
+              upload_url: ${{ github.event.release.upload_url }}
+              asset_path: ./ios/hv.framework
+              asset_name: hv.framework
+              asset_content_type: application/octet-stream
+              token: ${{ secrets.GITHUB_TOKEN }}
