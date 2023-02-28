@@ -23,6 +23,8 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - run: |
+          echo "CUSTOM_UPLOAD_URL=${{ steps.step_create_release.outputs.upload_url }}" >> $GITHUB_STATE
+
           echo "::set-output name=CUSTOM_UPLOAD_URL::${{ steps.step_create_release.outputs.upload_url }}"
           echo UPLOAD_URL=${{ env.CUSTOM_UPLOAD_URL }}
   # build-linux:
