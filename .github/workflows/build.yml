@@ -2,7 +2,6 @@ name: Cross-platform Build and Release
 
 env:
   ProductName: libhv
-  CUSTOM_UPLOAD_URL: ''
 
 on:
   push:
@@ -23,156 +22,156 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - run: |
-          echo "CUSTOM_UPLOAD_URL=${{ steps.step_create_release.outputs.upload_url }}" >> ${GITHUB_ENV}
-          echo "CUSTOM_UPLOAD_URL=${{ env.CUSTOM_UPLOAD_URL }}"
+          echo CUSTOM_UPLOAD_URL=${{ steps.step_create_release.outputs.upload_url }} >> ${GITHUB_ENV}
+          echo CUSTOM_UPLOAD_URL=${{ env.CUSTOM_UPLOAD_URL }}
 
-  build-linux:
-    name: build-linux
-    needs: create-release
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-    steps:
-      - uses: actions/checkout@v3
-        with:
-          submodules: 'recursive'
+  # build-linux:
+  #   name: build-linux
+  #   needs: create-release
+  #   runs-on: ubuntu-latest
+  #   permissions:
+  #     contents: write
+  #   steps:
+  #     - uses: actions/checkout@v3
+  #       with:
+  #         submodules: 'recursive'
 
-      - name: install dependencies
-        run: |
-          sudo apt update
-          sudo apt install libssl-dev libnghttp2-dev
+  #     - name: install dependencies
+  #       run: |
+  #         sudo apt update
+  #         sudo apt install libssl-dev libnghttp2-dev
 
-      - name: build
-        run: |
-          echo upUrl===${{ env.UPLOAD_URL }}
-          cd libhv
-          mkdir build && cd build
-          cmake .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=./install -DBUILD_SHARED_LIBS=ON -DCMAKE_POSITION_INDEPENDENT_CODE=ON
-          make -j$(nproc) VERBOSE=1
-          make install
+  #     - name: build
+  #       run: |
+  #         echo upUrl===${{ env.UPLOAD_URL }}
+  #         cd libhv
+  #         mkdir build && cd build
+  #         cmake .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=./install -DBUILD_SHARED_LIBS=ON -DCMAKE_POSITION_INDEPENDENT_CODE=ON
+  #         make -j$(nproc) VERBOSE=1
+  #         make install
 
-      - name: test
-        run: |
-          cd libhv
-          make check
-          make run-unittest
+  #     - name: test
+  #       run: |
+  #         cd libhv
+  #         make check
+  #         make run-unittest
 
-      - name: Upload dynamic library as release asset
-        uses: actions/upload-release-asset@v1
-        if: ${{ github.ref_type == 'tag' }}
-        with:
-          upload_url: ${{ env.UPLOAD_URL }}
-          asset_path: ./libhv/build/libhv.so
-          asset_name: libhv_linux_x64.so
-          asset_content_type: application/x-sharedlib
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  #     - name: Upload dynamic library as release asset
+  #       uses: actions/upload-release-asset@v1
+  #       if: ${{ github.ref_type == 'tag' }}
+  #       with:
+  #         upload_url: ${{ env.UPLOAD_URL }}
+  #         asset_path: ./libhv/build/libhv.so
+  #         asset_name: libhv_linux_x64.so
+  #         asset_content_type: application/x-sharedlib
+  #       env:
+  #         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-  build-windows:
-    name: build-windows
-    needs: create-release
-    runs-on: windows-latest
-    permissions:
-      contents: write
-    steps:
-      - uses: actions/checkout@v3
-        with:
-          submodules: 'recursive'
+  # build-windows:
+  #   name: build-windows
+  #   needs: create-release
+  #   runs-on: windows-latest
+  #   permissions:
+  #     contents: write
+  #   steps:
+  #     - uses: actions/checkout@v3
+  #       with:
+  #         submodules: 'recursive'
 
-      - name: install dependencies
-        run: |
-          choco install -y openssl.light
+  #     - name: install dependencies
+  #       run: |
+  #         choco install -y openssl.light
 
-      - name: build
-        run: |
-          cd libhv
-          mkdir cmake-build-win64
-          cd cmake-build-win64
-          cmake .. -G "Visual Studio 17 2022" -A x64
-          cmake --build .
+  #     - name: build
+  #       run: |
+  #         cd libhv
+  #         mkdir cmake-build-win64
+  #         cd cmake-build-win64
+  #         cmake .. -G "Visual Studio 17 2022" -A x64
+  #         cmake --build .
 
-      - name: Upload dynamic library as release asset
-        uses: actions/upload-release-asset@v1
-        if: ${{ github.ref_type == 'tag' }}
-        with:
-          upload_url: ${{ env.UPLOAD_URL }}
-          asset_path: ./libhv/cmake-build-win64/Release/hv.dll
-          asset_name: hv_windows_x64.dll
-          asset_content_type: application/x-sharedlib
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  #     - name: Upload dynamic library as release asset
+  #       uses: actions/upload-release-asset@v1
+  #       if: ${{ github.ref_type == 'tag' }}
+  #       with:
+  #         upload_url: ${{ env.UPLOAD_URL }}
+  #         asset_path: ./libhv/cmake-build-win64/Release/hv.dll
+  #         asset_name: hv_windows_x64.dll
+  #         asset_content_type: application/x-sharedlib
+  #       env:
+  #         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-  build-apple:
-    name: build-apple
-    needs: create-release
-    runs-on: macos-latest
-    permissions:
-      contents: write
-    steps:
-      - uses: actions/checkout@v3
-        with:
-          submodules: 'recursive'
+  # build-apple:
+  #   name: build-apple
+  #   needs: create-release
+  #   runs-on: macos-latest
+  #   permissions:
+  #     contents: write
+  #   steps:
+  #     - uses: actions/checkout@v3
+  #       with:
+  #         submodules: 'recursive'
 
-      - name: build
-        run: |
-          cd libhv
-          ./configure
-          make libhv evpp examples unittest
+  #     - name: build
+  #       run: |
+  #         cd libhv
+  #         ./configure
+  #         make libhv evpp examples unittest
 
-      - name: Upload dynamic library as release asset
-        uses: actions/upload-release-asset@v1
-        if: ${{ github.ref_type == 'tag' }}
-        with:
-          upload_url: ${{ env.UPLOAD_URL }}
-          asset_path: ./libhv/libhv/.libs/libhv.dylib
-          asset_name: libhv_macos_x64.dylib
-          asset_content_type: application/x-sharedlib
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  #     - name: Upload dynamic library as release asset
+  #       uses: actions/upload-release-asset@v1
+  #       if: ${{ github.ref_type == 'tag' }}
+  #       with:
+  #         upload_url: ${{ env.UPLOAD_URL }}
+  #         asset_path: ./libhv/libhv/.libs/libhv.dylib
+  #         asset_name: libhv_macos_x64.dylib
+  #         asset_content_type: application/x-sharedlib
+  #       env:
+  #         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-  build-android:
-    name: build-android
-    needs: create-release
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-    steps:
-      - uses: actions/checkout@v3
-        with:
-          submodules: 'recursive'
+  # build-android:
+  #   name: build-android
+  #   needs: create-release
+  #   runs-on: ubuntu-latest
+  #   permissions:
+  #     contents: write
+  #   steps:
+  #     - uses: actions/checkout@v3
+  #       with:
+  #         submodules: 'recursive'
 
-      - name: install dependencies
-        run: |
-          sudo apt update
-          sudo apt install -y build-essential cmake git
-          sudo apt install -y wget zip unzip tar tree
+  #     - name: install dependencies
+  #       run: |
+  #         sudo apt update
+  #         sudo apt install -y build-essential cmake git
+  #         sudo apt install -y wget zip unzip tar tree
 
-      - name: Install Android NDK
-        run: |
-          mkdir -p $HOME/android-sdk/ndk
-          wget -q https://dl.google.com/android/repository/android-ndk-r25c-linux.zip -O ndk.zip
-          unzip -q ndk.zip -d $HOME/android-sdk/ndk
-          rm ndk.zip
-          export ANDROID_NDK_HOME=$HOME/android-sdk/ndk
-          export PATH=$PATH:$ANDROID_NDK_HOME
+  #     - name: Install Android NDK
+  #       run: |
+  #         mkdir -p $HOME/android-sdk/ndk
+  #         wget -q https://dl.google.com/android/repository/android-ndk-r25c-linux.zip -O ndk.zip
+  #         unzip -q ndk.zip -d $HOME/android-sdk/ndk
+  #         rm ndk.zip
+  #         export ANDROID_NDK_HOME=$HOME/android-sdk/ndk
+  #         export PATH=$PATH:$ANDROID_NDK_HOME
 
-      - name: Build dynamic library for Android
-        run: |
-          cd libhv
-          mkdir -p build-android
-          cd build-android
-          cmake .. -DCMAKE_TOOLCHAIN_FILE=$ANDROID_NDK_HOME/build/cmake/android.toolchain.cmake -DANDROID_ABI=arm64-v8a -DANDROID_NATIVE_API_LEVEL=21 -DANDROID_STL=c++_shared
-          make
-          zip -j libhv_android_arm64-v8a.zip ./lib/libhv.so
+  #     - name: Build dynamic library for Android
+  #       run: |
+  #         cd libhv
+  #         mkdir -p build-android
+  #         cd build-android
+  #         cmake .. -DCMAKE_TOOLCHAIN_FILE=$ANDROID_NDK_HOME/build/cmake/android.toolchain.cmake -DANDROID_ABI=arm64-v8a -DANDROID_NATIVE_API_LEVEL=21 -DANDROID_STL=c++_shared
+  #         make
+  #         zip -j libhv_android_arm64-v8a.zip ./lib/libhv.so
 
-      - name: Upload the .zip file as a release asset
-        uses: actions/upload-release-asset@v1
-        if: ${{ github.ref_type == 'tag' }}
-        with:
-          upload_url: ${{ env.UPLOAD_URL }}
-          asset_path: ./libhv/build-android/libhv_android_arm64-v8a.zip
-          asset_name: libhv_android_arm64-v8a.zip
-          asset_content_type: application/octet-stream
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  #     - name: Upload the .zip file as a release asset
+  #       uses: actions/upload-release-asset@v1
+  #       if: ${{ github.ref_type == 'tag' }}
+  #       with:
+  #         upload_url: ${{ env.UPLOAD_URL }}
+  #         asset_path: ./libhv/build-android/libhv_android_arm64-v8a.zip
+  #         asset_name: libhv_android_arm64-v8a.zip
+  #         asset_content_type: application/octet-stream
+  #       env:
+  #         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
