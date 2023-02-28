@@ -42,8 +42,8 @@ jobs:
         run: |
           sudo apt update
           sudo apt install libssl-dev libnghttp2-dev
-          echo aoooooo=${{ env.CUSTOM_UPLOAD_URL }}
-          
+          echo aoooooo=${{ needs.create-release.steps.step_create_release.outputs.upload_url }}
+
   #     - name: build
   #       run: |
   #         echo upUrl===${{ env.UPLOAD_URL }}
