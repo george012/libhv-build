@@ -2,7 +2,7 @@ name: Cross-platform Build and Release
 
 env:
   ProductName: libhv
-  UPLOAD_URL: ''
+  CUSTOM_UPLOAD_URL: ''
 
 on:
   push:
@@ -25,8 +25,8 @@ jobs:
           UPLOAD_URL: ${{ steps.step_create_release.outputs.upload_url }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - run: |
-          echo "${{ steps.step_create_release.outputs.upload_url }}" >> "${{ env.UPLOAD_URL }}"
-          echo UPLOAD_URL=${{ env.UPLOAD_URL }}
+          echo "${{ steps.step_create_release.outputs.upload_url }}" >> "${{ env.CUSTOM_UPLOAD_URL }}"
+          echo UPLOAD_URL=${{ env.CUSTOM_UPLOAD_URL }}
 
   # build-linux:
   #   name: build-linux
