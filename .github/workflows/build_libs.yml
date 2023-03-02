@@ -122,57 +122,32 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   build-apple:
-    runs-on: macos-latest     # 在 macOS 环境下运行
-    strategy:                 # 使用策略来配置编译参数
-      matrix:                # 使用矩阵来配置不同的编译参数
-        xcode: ["12.0"]      # Xcode 版本为 12.0
-        sdk: ["11.0"]        # SDK 版本为 11.0
-        arch: ["x86_64", "arm64"]   # 编译的架构包括 x86_64 和 arm64，以支持 M1 芯片的编译
-    steps:                    # 步骤
-      - name: Checkout        # 名称为 Checkout 的步骤，使用 actions/checkout 动作来检出代码
-        uses: actions/checkout@v2
+    name: build-apple
+    needs: create-release
+    runs-on: macos-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          submodules: 'recursive'
 
-      - name: Install Dependencies  # 名称为 Install Dependencies 的步骤，用来安装依赖
-        if: runner.os == 'macOS'   # 仅在 macOS 系统上运行
+      - name: build
         run: |
-          brew update# 
-          brew install cmake openssl libsodium
+          cd libhv
+          ./configure
+          make libhv evpp examples unittest
 
-      - name: Configure & Build   # 名称为 Configure & Build 的步骤，用来配置和构建 libhv 库
-        run: |
-          mkdir build && cd build
-          cmake .. \
-          && -DBUILD_SHARED_LIBS=ON \
-          && -DCMAKE_BUILD_TYPE=Release \
-          && -DENABLE_ASAN=OFF \
-          && -DENABLE_UBSAN=OFF \
-          && -DENABLE_TEST=OFF \
-          && -DENABLE_COVERAGE=OFF \
-          && -DENABLE_EXAMPLE=OFF \
-          && -DENABLE_OPENSSL=ON \
-          && -DENABLE_LIBSODIUM=ON \
-          && -DENABLE_HTTP2=ON \
-          && -DENABLE_CJSON=ON \
-          && -DENABLE_HPROSE=ON \
-          && -DENABLE_QUICKLZ=ON \
-          && -DENABLE_ZLIB=ON \
-          && -DENABLE_LZ4=ON \
-          && -DENABLE_BROTLI=ON \
-          && -DENABLE_GZIP=ON \
-          && -DENABLE_DEFLATE=ON \
-          && -DENABLE_WEBSOCKET=ON \
-          && -DENABLE_MBEDTLS=OFF
-
-        - name: Upload dynamic library as release asset
-          uses: actions/upload-release-asset@v1
-          if: ${{ github.ref_type == 'tag' }}
-          with:
-            upload_url: ${{ needs.create-release.outputs.upload_url }}
-            asset_path: ./libhv/lib/libhv.dylib
-            asset_name: libhv_macos_x64.dylib
-            asset_content_type: application/x-sharedlib
-          env:
-            GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Upload dynamic library as release asset
+        uses: actions/upload-release-asset@v1
+        if: ${{ github.ref_type == 'tag' }}
+        with:
+          upload_url: ${{ needs.create-release.outputs.upload_url }}
+          asset_path: ./libhv/lib/libhv.dylib
+          asset_name: libhv_macos_x64.dylib
+          asset_content_type: application/x-sharedlib
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   build-android:
     name: build-android
