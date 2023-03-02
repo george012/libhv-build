@@ -135,34 +135,33 @@ jobs:
       - name: Install Dependencies  # 名称为 Install Dependencies 的步骤，用来安装依赖
         if: runner.os == 'macOS'   # 仅在 macOS 系统上运行
         run: |
-          brew update             # 更新 Homebrew
-          brew install cmake openssl libsodium   # 安装依赖的软件包
+          brew update# 
+          brew install cmake openssl libsodium
 
       - name: Configure & Build   # 名称为 Configure & Build 的步骤，用来配置和构建 libhv 库
         run: |
-          mkdir build && cd build   # 创建 build 目录并进入
-          cmake .. \                # 使用 cmake 来配置构建过程
-            -DBUILD_SHARED_LIBS=ON \   # 使用动态库
-            -DCMAKE_BUILD_TYPE=Release \  # 使用 Release 模式
-            -DENABLE_ASAN=OFF \      # 关闭 ASan
-            -DENABLE_UBSAN=OFF \     # 关闭 UBSan
-            -DENABLE_TEST=OFF \      # 关闭测试
-            -DENABLE_COVERAGE=OFF \  # 关闭代码覆盖率
-            -DENABLE_EXAMPLE=OFF \   # 关闭示例程序
-            -DENABLE_OPENSSL=ON \    # 开启 OpenSSL 支持
-            -DENABLE_LIBSODIUM=ON \  # 开启 libsodium 支持
-            -DENABLE_HTTP2=ON \      # 开启 HTTP/2 支持
-            -DENABLE_CJSON=ON \      # 开启 CJSON 支持
-            -DENABLE_HPROSE=ON \     # 开启 Hprose 支持
-            -DENABLE_QUICKLZ=ON \    # 开启 QuickLZ 支持
-            -DENABLE_ZLIB=ON \       # 开启 Zlib 支持
-            -DENABLE_LZ4=ON \        # 开启 LZ4 支持
-            -DENABLE_BROTLI=ON \     # 开启 Brotli 支持
-            -DENABLE_GZIP=ON \       # 开启 Gzip 支持
-            -DENABLE_DEFLATE=ON \    # 开启 Deflate 支持
-            -DENABLE_WEBSOCKET=ON \  # 开启 WebSocket 支持
-            -DENABLE_MBEDTLS=OFF \
-
+          mkdir build && cd build
+          cmake .. \
+          && -DBUILD_SHARED_LIBS=ON \
+          && -DCMAKE_BUILD_TYPE=Release \
+          && -DENABLE_ASAN=OFF \
+          && -DENABLE_UBSAN=OFF \
+          && -DENABLE_TEST=OFF \
+          && -DENABLE_COVERAGE=OFF \
+          && -DENABLE_EXAMPLE=OFF \
+          && -DENABLE_OPENSSL=ON \
+          && -DENABLE_LIBSODIUM=ON \
+          && -DENABLE_HTTP2=ON \
+          && -DENABLE_CJSON=ON \
+          && -DENABLE_HPROSE=ON \
+          && -DENABLE_QUICKLZ=ON \
+          && -DENABLE_ZLIB=ON \
+          && -DENABLE_LZ4=ON \
+          && -DENABLE_BROTLI=ON \
+          && -DENABLE_GZIP=ON \
+          && -DENABLE_DEFLATE=ON \
+          && -DENABLE_WEBSOCKET=ON \
+          && -DENABLE_MBEDTLS=OFF
 
         - name: Upload dynamic library as release asset
           uses: actions/upload-release-asset@v1

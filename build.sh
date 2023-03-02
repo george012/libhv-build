@@ -1,5 +1,5 @@
 #!/bin/bash
-ProductName=libhv
+ProductName=libhv-build
 Build () 
 {
     kas=`git rev-list --tags --max-count=1` \
