@@ -60,7 +60,7 @@ jobs:
         run: |
           sudo apt update
           sudo apt install -y build-essential cmake git
-          sudo apt install libssl-dev libnghttp2-dev tree
+          sudo apt install libssl-dev libnghttp2-dev
           mkdir -p ./libhv/build_libs
 
       - name: build x86_64
@@ -79,7 +79,6 @@ jobs:
 
       - name: merge libs
         run: |
-          tree
           cd ./libhv/build_libs
           ld -shared -o libhv.so ../build-arm64/lib/libhv.so ../build-x86_64/lib/libhv.so
 
@@ -128,7 +127,6 @@ jobs:
 
       - name: merge DLLs
         run: |
-          tree
           cd ./libhv/build_libs
           lib.exe /out:hv.dll ../cmake-build-win64/bin/hv.dll ../cmake-build-arm64/bin/hv.dll libssl-1_1.dll libcrypto-1_1.dll
 
@@ -186,7 +184,7 @@ jobs:
         run: |
           sudo apt update
           sudo apt install -y build-essential cmake git
-          sudo apt install -y wget zip unzip tar tree
+          sudo apt install -y wget zip unzip tar
 
       - name: Install Android NDK
         run: |
@@ -221,7 +219,6 @@ jobs:
 
       - name: Merge shared libraries into one shared library
         run: |
-          tree
           cd libhv/build_libs
           mkdir -p build-android-armv7a-armv8a
           $ANDROID_NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64/bin/ld -shared -o ./build-android-armv7a-armv8a/libhv.so ../build-android-armv7a/lib/libhv.so ../build-android-armv8a-arm64/lib/libhv.so && $ANDROID_NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64/bin/ld -shared -o libhv.so ./build-android-armv7a-armv8a/libhv.so ../build-android-x86_64/lib/libhv.so
