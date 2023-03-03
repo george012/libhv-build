@@ -128,7 +128,11 @@ jobs:
       - name: merge DLLs
         run: |
           cd ./libhv/build_libs
-          link /DLL /OUT:hv.dll ../cmake-build-win64/bin/hv.dll ../cmake-build-arm64/bin/hv.dll libssl-1_1.dll libcrypto-1_1.dll
+          set LIB_PATH=%cd%
+          cd ../cmake-build-win64/bin
+          lib.exe /OUT:hv.lib hv.obj
+          cd %LIB_PATH%
+          link /DLL /OUT:hv.dll ../cmake-build-win64/bin/hv.dll ../cmake-build-arm64/bin/hv.dll %LOCALAPPDATA%\openssl\lib\libssl-1_1-x64.dll %LOCALAPPDATA%\openssl\lib\libcrypto-1_1-x64.dll /LIBPATH:%LOCALAPPDATA%\openssl\lib
 
       - name: Upload dynamic library as release asset
         uses: actions/upload-release-asset@v1
@@ -136,7 +140,7 @@ jobs:
         with:
           upload_url: ${{ needs.create-release.outputs.upload_url }}
           asset_path: ./libhv/build_libs/hv.dll
-          asset_name: hv_windows_x64.dll
+          asset_name: hv_windows_x64_arm64.dll
           asset_content_type: application/x-sharedlib
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -160,6 +164,7 @@ jobs:
 
       - name: build x86_64 and arm64
         run: |
+          cd libhv
           build() {
             arch=$1
             mkdir -p build-$arch && cd build-$arch
@@ -209,7 +214,7 @@ jobs:
         with:
           submodules: 'recursive'
 
-      - name: Install Android NDK and build dynamic libraries
+      - name: Install Android NDK
         run: |
           export ANDROID_HOME=$HOME/android-sdk
           export ANDROID_SDK_ROOT=$HOME/android-sdk
@@ -219,8 +224,15 @@ jobs:
           wget -q https://dl.google.com/android/repository/android-ndk-r25c-linux.zip -O ndk.zip
           unzip -q ndk.zip -d $ANDROID_NDK_HOME
           rm ndk.zip
+
+      - name: Build dynamic libraries for Android
+        run: |
+          export ANDROID_HOME=$HOME/android-sdk
+          export ANDROID_SDK_ROOT=$HOME/android-sdk
+          export ANDROID_NDK_HOME=$ANDROID_HOME/ndk
+          export PATH=$PATH:$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/platform-tools:$ANDROID_HOME/emulator:$ANDROID_HOME/tools:$ANDROID_NDK_HOME
           cd libhv
-          for abi in "${{ matrix.abi }}"; do
+          for abi in armeabi-v7a arm64-v8a x86 x86_64; do
             mkdir -p build-android-$abi && cd build-android-$abi
             cmake .. -DCMAKE_TOOLCHAIN_FILE=$ANDROID_NDK_HOME/build/cmake/android.toolchain.cmake -DANDROID_ABI=$abi -DANDROID_NATIVE_API_LEVEL=21 -DANDROID_STL=c++_shared
             make
