@@ -128,7 +128,7 @@ jobs:
       - name: merge DLLs
         run: |
           cd libhv/build_libs
-          link /DLL /OUT:hv.dll ..\cmake-build-win64\bin\hv.dll ..\cmake-build-arm64\bin\hv.dll %LOCALAPPDATA%\openssl\lib\libssl-1_1.dll %LOCALAPPDATA%\openssl\lib\libcrypto-1_1.dll
+          link /DLL /OUT:hv.dll ..\\cmake-build-win64\\bin\\hv.dll ..\\cmake-build-arm64\\bin\\hv.dll %LOCALAPPDATA%\\openssl\\lib\\libssl-1_1.dll %LOCALAPPDATA%\\openssl\\lib\\libcrypto-1_1.dll
 
       - name: Upload dynamic library as release asset
         uses: actions/upload-release-asset@v1
@@ -187,7 +187,7 @@ jobs:
         if: ${{ github.ref_type == 'tag' }}
         with:
           upload_url: ${{ needs.create-release.outputs.upload_url }}
-          asset_path: ./libhv/build_libs/merge_tmp/libhv.dylib
+          asset_path: ./libhv/build_libs/libhv.dylib
           asset_name: libhv_macos_x64_arm64.dylib
           asset_content_type: application/x-sharedlib
         env:
@@ -243,9 +243,9 @@ jobs:
           tree
           cd libhv/build_libs
           $ANDROID_NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64/bin/ld -shared -o libhv.so \
-            ./build-android-armv7a/lib/libhv.so \
-            ./build-android-armv8a-arm64/lib/libhv.so \
-            ./build-android-x86_64/lib/libhv.so
+            ../build-android-armv7a/lib/libhv.so \
+            ../build-android-armv8a-arm64/lib/libhv.so \
+            ../build-android-x86_64/lib/libhv.so
 
       - name: Upload the .so file as a release asset
         uses: actions/upload-release-asset@v1
