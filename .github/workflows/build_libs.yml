@@ -81,7 +81,7 @@ jobs:
         run: |
           tree
           cd ./libhv/build_libs
-          ld -shared -o libhv.so ../libhv/build-arm64/lib/libhv.so ../libhv/build-x86_64/lib/libhv.so
+          ld -shared -o libhv.so ../build-arm64/lib/libhv.so ../build-x86_64/lib/libhv.so
 
       - name: Upload dynamic library as release asset
         uses: actions/upload-release-asset@v1
@@ -223,7 +223,8 @@ jobs:
         run: |
           tree
           cd libhv/build_libs
-          $ANDROID_NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64/bin/ld -shared -o libhv.so ../build-android-armv7a/lib/libhv.so ../build-android-armv8a-arm64/lib/libhv.so ../build-android-x86_64/lib/libhv.so
+          mkdir -p build-android-armv7a-armv8a
+          $ANDROID_NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64/bin/ld -shared -o ./build-android-armv7a-armv8a/libhv.so ../build-android-armv7a/lib/libhv.so ../build-android-armv8a-arm64/lib/libhv.so && $ANDROID_NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64/bin/ld -shared -o libhv.so ./build-android-armv7a-armv8a/libhv.so ../build-android-x86_64/lib/libhv.so
 
       - name: Upload the .so file as a release asset
         uses: actions/upload-release-asset@v1
