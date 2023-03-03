@@ -79,6 +79,7 @@ jobs:
 
       - name: merge libs
         run: |
+          tree
           cd ./libhv/build_libs
           ld -shared -o libhv.so ../libhv/build-arm64/lib/libhv.so ../libhv/build-x86_64/lib/libhv.so
 
@@ -107,7 +108,7 @@ jobs:
       - name: install dependencies
         run: |
           choco install -y openssl.light
-          make -p ./libhv/build_libs
+          mkdir -p ./libhv/build_libs
 
       - name: build x64
         run: |
@@ -127,6 +128,7 @@ jobs:
 
       - name: merge DLLs
         run: |
+          tree
           cd ./libhv/build_libs
           lib.exe /out:hv.dll ../cmake-build-win64/bin/hv.dll ../cmake-build-arm64/bin/hv.dll libssl-1_1.dll libcrypto-1_1.dll
 
@@ -202,7 +204,6 @@ jobs:
           mkdir -p build-android-armv7a && cd build-android-armv7a
           cmake .. -DCMAKE_TOOLCHAIN_FILE=$ANDROID_NDK_HOME/build/cmake/android.toolchain.cmake -DANDROID_ABI=armeabi-v7a -DANDROID_NATIVE_API_LEVEL=21 -DANDROID_STL=c++_shared
           make
-          mv ./lib/libhv.so ../build_libs/libhv_armv7a.so
 
       - name: Build dynamic library for Android-armv8a-arm64
         run: |
@@ -210,7 +211,6 @@ jobs:
           mkdir -p build-android-armv8a-arm64 && cd build-android-armv8a-arm64
           cmake .. -DCMAKE_TOOLCHAIN_FILE=$ANDROID_NDK_HOME/build/cmake/android.toolchain.cmake -DANDROID_ABI=arm64-v8a -DANDROID_NATIVE_API_LEVEL=21 -DANDROID_STL=c++_shared
           make
-          mv ./lib/libhv.so ../build_libs/libhv_armv8a.so
 
       - name: Build dynamic library for Android-x86_64
         run: |
@@ -218,10 +218,10 @@ jobs:
           mkdir -p build-android-x86_64 && cd build-android-x86_64
           cmake .. -DCMAKE_TOOLCHAIN_FILE=$ANDROID_NDK_HOME/build/cmake/android.toolchain.cmake -DANDROID_ABI=x86_64 -DANDROID_NATIVE_API_LEVEL=21 -DANDROID_STL=c++_shared
           make
-          mv ./lib/libhv.so ../build_libs/libhv_x86_64.so
 
       - name: Merge shared libraries into one shared library
         run: |
+          tree
           cd libhv/build_libs
           $ANDROID_NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64/bin/ld -shared -o libhv.so ../build-android-armv7a/lib/libhv.so ../build-android-armv8a-arm64/lib/libhv.so ../build-android-x86_64/lib/libhv.so
 
