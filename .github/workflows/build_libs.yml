@@ -202,43 +202,47 @@ jobs:
 
   build-android:
     name: build-android
-    runs-on: ubuntu-latest
     needs: create-release
+    runs-on: ubuntu-latest
     permissions:
       contents: write
-    strategy:
-      matrix:
-        abi: [armeabi-v7a, arm64-v8a, x86, x86_64]
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           submodules: 'recursive'
 
+      - name: install dependencies
+        run: |
+          sudo apt update
+          sudo apt install -y build-essential cmake git
+          sudo apt install -y wget zip unzip tar
       - name: Install Android NDK
         run: |
-          export ANDROID_HOME=$HOME/android-sdk
-          export ANDROID_SDK_ROOT=$HOME/android-sdk
-          export ANDROID_NDK_HOME=$ANDROID_HOME/ndk
-          export PATH=$PATH:$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/platform-tools:$ANDROID_HOME/emulator:$ANDROID_HOME/tools:$ANDROID_NDK_HOME
-          mkdir -p $ANDROID_NDK_HOME
+          mkdir -p $HOME/android-sdk/ndk
           wget -q https://dl.google.com/android/repository/android-ndk-r25c-linux.zip -O ndk.zip
-          unzip -q ndk.zip -d $ANDROID_NDK_HOME
+          unzip -q ndk.zip -d $HOME/android-sdk/ndk
           rm ndk.zip
-
-      - name: Build dynamic libraries for Android
+          export ANDROID_NDK_HOME=$HOME/android-sdk/ndk
+          export PATH=$PATH:$ANDROID_NDK_HOME
+          mkdir -p libhv/build_libs
+      - name: Build dynamic library for Android-armv7a
         run: |
-          export ANDROID_HOME=$HOME/android-sdk
-          export ANDROID_SDK_ROOT=$HOME/android-sdk
-          export ANDROID_NDK_HOME=$ANDROID_HOME/ndk
-          export PATH=$PATH:$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/platform-tools:$ANDROID_HOME/emulator:$ANDROID_HOME/tools:$ANDROID_NDK_HOME
           cd libhv
-          for abi in armeabi-v7a arm64-v8a x86 x86_64; do
-            mkdir -p build-android-$abi && cd build-android-$abi
-            cmake .. -DCMAKE_TOOLCHAIN_FILE=$ANDROID_NDK_HOME/build/cmake/android.toolchain.cmake -DANDROID_ABI=$abi -DANDROID_NATIVE_API_LEVEL=21 -DANDROID_STL=c++_shared
-            make
-            cd ..
-          done
-
+          mkdir -p build-android-armv7a && cd build-android-armv7a
+          cmake .. -DCMAKE_TOOLCHAIN_FILE=$ANDROID_NDK_HOME/build/cmake/android.toolchain.cmake -DCMAKE_BUILD_TYPE=Release -DANDROID_ABI=armeabi-v7a -DANDROID_NATIVE_API_LEVEL=21 -DANDROID_STL=c++_shared
+          make
+      - name: Build dynamic library for Android-armv8a-arm64
+        run: |
+          cd libhv
+          mkdir -p build-android-armv8a-arm64 && cd build-android-armv8a-arm64
+          cmake .. -DCMAKE_TOOLCHAIN_FILE=$ANDROID_NDK_HOME/build/cmake/android.toolchain.cmake -DCMAKE_BUILD_TYPE=Release -DANDROID_ABI=arm64-v8a -DANDROID_NATIVE_API_LEVEL=21 -DANDROID_STL=c++_shared
+          make
+      - name: Build dynamic library for Android-x86_64
+        run: |
+          cd libhv
+          mkdir -p build-android-x86_64 && cd build-android-x86_64
+          cmake .. -DCMAKE_TOOLCHAIN_FILE=$ANDROID_NDK_HOME/build/cmake/android.toolchain.cmake -DCMAKE_BUILD_TYPE=Release -DANDROID_ABI=x86_64 -DANDROID_NATIVE_API_LEVEL=21 -DANDROID_STL=c++_shared
+          make
       - name: Merge shared libraries into one shared library
         run: |
           cd libhv/build_libs
@@ -257,4 +261,3 @@ jobs:
           asset_content_type: application/octet-stream
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
