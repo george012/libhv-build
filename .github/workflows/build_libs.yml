@@ -48,10 +48,6 @@ jobs:
   build-linux:
     name: build-linux
     needs: create-release
-    strategy:
-      matrix:
-        os: [ubuntu-latest]
-        arch: [x86_64, arm64]
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -163,10 +159,6 @@ jobs:
   build-android:
     name: build-android
     needs: create-release
-    strategy:
-      matrix:
-        os: [ubuntu-latest]
-        arch: [armv7a、armv8a、arm64]
     runs-on: ubuntu-latest
     permissions:
       contents: write
