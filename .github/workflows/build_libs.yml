@@ -223,7 +223,7 @@ jobs:
       - name: Merge shared libraries into one shared library
         run: |
           cd libhv/build_libs
-          $ANDROID_NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64/bin/ld -o libhv.so ../build-android-armv7a/lib/libhv.so ../build-android-armv8a-arm64/lib/libhv.so ../build-android-x86_64/lib/libhv.so
+          $ANDROID_NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64/bin/ld -shared -o libhv.so ../build-android-armv7a/lib/libhv.so ../build-android-armv8a-arm64/lib/libhv.so ../build-android-x86_64/lib/libhv.so
 
       - name: Upload the .so file as a release asset
         uses: actions/upload-release-asset@v1
