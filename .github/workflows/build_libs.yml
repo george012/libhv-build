@@ -61,11 +61,12 @@ jobs:
           sudo apt update
           sudo apt install -y build-essential cmake git
           sudo apt install libssl-dev libnghttp2-dev tree
+          mkdir -p ./build_libs
 
       - name: build x86_64
         run: |
           cd libhv
-          mkdir build && cd build
+          mkdir build-x86_64 && cd build-x86_64
           cmake .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=./install -DBUILD_SHARED_LIBS=ON -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DCMAKE_OSX_ARCHITECTURES="x86_64"
           make -j$(nproc) VERBOSE=1
           make install
@@ -80,8 +81,8 @@ jobs:
 
       - name: merge libs
         run: |
-          cd libhv/build/install/lib
-          lipo -create -output libhv.so libhv.so libhv.arm64.so
+          cd ./build_libs
+          lipo -create -output libhv.so ../build-arm64/install/lib/libhv.so ../build-x86_64/install/lib/libhv.so
 
       - name: Upload dynamic library as release asset
         uses: actions/upload-release-asset@v1
@@ -182,7 +183,7 @@ jobs:
           export ANDROID_NDK_HOME=$HOME/android-sdk/ndk
           export PATH=$PATH:$ANDROID_NDK_HOME
 
-      - name: Build dynamic library for Android
+      - name: Build dynamic library for Android-armv7a
         run: |
           cd libhv
           mkdir -p build-android-armv7a
@@ -193,21 +194,27 @@ jobs:
           mkdir -p libhv/lib
           mv libhv/build-android-armv7a/libhv.so libhv/lib/libhv_armv7a.so
 
-          mkdir -p build-android-armv8a
-          cd build-android-armv8a
+      - name: Build dynamic library for Android-armv8a-arm64
+        run: |
+          cd libhv
+          mkdir -p build-android-armv8a-arm64
+          cd build-android-armv8a-arm64
           cmake .. -DCMAKE_TOOLCHAIN_FILE=$ANDROID_NDK_HOME/build/cmake/android.toolchain.cmake -DANDROID_ABI=arm64-v8a -DANDROID_NATIVE_API_LEVEL=21 -DANDROID_STL=c++_shared
           make
           cd ../..
           mkdir -p libhv/lib
           mv libhv/build-android-armv8a/libhv.so libhv/lib/libhv_armv8a.so
 
-          mkdir -p build-android-arm64
-          cd build-android-arm64
-          cmake .. -DCMAKE_TOOLCHAIN_FILE=$ANDROID_NDK_HOME/build/cmake/android.toolchain.cmake -DANDROID_ABI=arm64-v8a -DANDROID_NATIVE_API_LEVEL=21 -DANDROID_STL=c++_shared
+      - name: Build dynamic library for Android-x86_64
+        run: |
+          cd libhv
+          mkdir -p build-android-x86_64
+          cd build-android-x86_64
+          cmake .. -DCMAKE_TOOLCHAIN_FILE=$ANDROID_NDK_HOME/build/cmake/android.toolchain.cmake -DANDROID_ABI=x86_64 -DANDROID_NATIVE_API_LEVEL=21 -DANDROID_STL=c++_shared
           make
           cd ../..
           mkdir -p libhv/lib
-          mv libhv/build-android-arm64/libhv.so libhv/lib/libhv_arm64.so
+          mv libhv/build-android-x86_64/libhv.so libhv/lib/libhv_x86_64.so
 
       - name: Merge shared libraries into one shared library
         run: |
@@ -220,7 +227,7 @@ jobs:
               -o libhv.so \
               libhv_armv7a.so \
               libhv_armv8a.so \
-              libhv_arm64.so
+              libhv_x86_64.so
           cd ..
           mkdir -p lib
           mv build-android-all/libhv.so lib/libhv.so
@@ -231,7 +238,7 @@ jobs:
         with:
           upload_url: ${{ needs.create-release.outputs.upload_url }}
           asset_path: ./libhv/lib/libhv.so
-          asset_name: libhv.so
+          asset_name: libhv-android.so
           asset_content_type: application/octet-stream
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

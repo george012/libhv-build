@@ -8,11 +8,11 @@ chmod +x build.sh && ./build.sh
 
 # 问题
 
-## Error: Resource not accessible by integration
-```
-Settings -> Actions -> General -> Workflow permissions -> Read and write permissions
+## 在`Linux`支持`arm64`和`x86_x64`
+## 在`MacOS`支持`arm64`和`x86_x64`
+## 在`Windows`支持`arm64`和`x86_x64`
+## 在`Android`支持`armv8a`、`armv7a`、`arm64`、`x86_x64`
 
-```
 
 # 未完成问题。
 * 目前Linux编译不通过
