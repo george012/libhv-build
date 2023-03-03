@@ -69,7 +69,7 @@ jobs:
           mkdir build-x86_64 && cd build-x86_64
           cmake .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=./install -DBUILD_SHARED_LIBS=ON -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DCMAKE_OSX_ARCHITECTURES="x86_64"
           make -j$(nproc) VERBOSE=1
-          make install
+
 
       - name: build arm64
         run: |
@@ -77,19 +77,18 @@ jobs:
           mkdir build-arm64 && cd build-arm64
           cmake .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=./install -DBUILD_SHARED_LIBS=ON -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DCMAKE_OSX_ARCHITECTURES="arm64"
           make -j$(nproc) VERBOSE=1
-          make install
 
       - name: merge libs
         run: |
           cd ./build_libs
-          lipo -create -output libhv.so ../build-arm64/install/lib/libhv.so ../build-x86_64/install/lib/libhv.so
+          ld -shared -o libhv.so ../build-arm64/lib/libhv.so ../build-x86_64/lib/libhv.so
 
       - name: Upload dynamic library as release asset
         uses: actions/upload-release-asset@v1
         if: ${{ github.ref_type == 'tag' }}
         with:
           upload_url: ${{ needs.create-release.outputs.upload_url }}
-          asset_path: ./libhv/build/install/lib/libhv.so
+          asset_path: ./libhv/build_libs/libhv.so
           asset_name: libhv_linux_x64_arm64.so
           asset_content_type: application/x-sharedlib
         env:
@@ -182,45 +181,35 @@ jobs:
           rm ndk.zip
           export ANDROID_NDK_HOME=$HOME/android-sdk/ndk
           export PATH=$PATH:$ANDROID_NDK_HOME
+          mkdir -p libhv/build_libs
 
       - name: Build dynamic library for Android-armv7a
         run: |
           cd libhv
-          mkdir -p build-android-armv7a
-          cd build-android-armv7a
+          mkdir -p build-android-armv7a && cd build-android-armv7a
           cmake .. -DCMAKE_TOOLCHAIN_FILE=$ANDROID_NDK_HOME/build/cmake/android.toolchain.cmake -DANDROID_ABI=armeabi-v7a -DANDROID_NATIVE_API_LEVEL=21 -DANDROID_STL=c++_shared
           make
-          cd ../..
-          mkdir -p libhv/lib
-          mv libhv/build-android-armv7a/libhv.so libhv/lib/libhv_armv7a.so
+          mv ./lib/libhv.so ../build_libs/libhv_armv7a.so
 
       - name: Build dynamic library for Android-armv8a-arm64
         run: |
           cd libhv
-          mkdir -p build-android-armv8a-arm64
-          cd build-android-armv8a-arm64
+          mkdir -p build-android-armv8a-arm64 && cd build-android-armv8a-arm64
           cmake .. -DCMAKE_TOOLCHAIN_FILE=$ANDROID_NDK_HOME/build/cmake/android.toolchain.cmake -DANDROID_ABI=arm64-v8a -DANDROID_NATIVE_API_LEVEL=21 -DANDROID_STL=c++_shared
           make
-          cd ../..
-          mkdir -p libhv/lib
-          mv libhv/build-android-armv8a/libhv.so libhv/lib/libhv_armv8a.so
+          mv ./lib/libhv.so ../build_libs/libhv_armv8a.so
 
       - name: Build dynamic library for Android-x86_64
         run: |
           cd libhv
-          mkdir -p build-android-x86_64
-          cd build-android-x86_64
+          mkdir -p build-android-x86_64 && cd build-android-x86_64
           cmake .. -DCMAKE_TOOLCHAIN_FILE=$ANDROID_NDK_HOME/build/cmake/android.toolchain.cmake -DANDROID_ABI=x86_64 -DANDROID_NATIVE_API_LEVEL=21 -DANDROID_STL=c++_shared
           make
-          cd ../..
-          mkdir -p libhv/lib
-          mv libhv/build-android-x86_64/libhv.so libhv/lib/libhv_x86_64.so
+          mv ./lib/libhv.so ../build_libs/libhv_x86_64.so
 
       - name: Merge shared libraries into one shared library
         run: |
-          cd libhv/lib
-          mkdir -p build-android-all
-          cd build-android-all
+          cd libhv/build_libs
           $ANDROID_NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64/bin/ld \
               -shared \
               -soname libhv.so \
@@ -228,16 +217,13 @@ jobs:
               libhv_armv7a.so \
               libhv_armv8a.so \
               libhv_x86_64.so
-          cd ..
-          mkdir -p lib
-          mv build-android-all/libhv.so lib/libhv.so
 
       - name: Upload the .so file as a release asset
         uses: actions/upload-release-asset@v1
         if: ${{ github.ref_type == 'tag' }}
         with:
           upload_url: ${{ needs.create-release.outputs.upload_url }}
-          asset_path: ./libhv/lib/libhv.so
+          asset_path: ./libhv/build_libs/libhv.so
           asset_name: libhv-android.so
           asset_content_type: application/octet-stream
         env:
