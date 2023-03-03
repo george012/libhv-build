@@ -128,7 +128,7 @@ jobs:
       - name: merge DLLs
         run: |
           cd libhv/build_libs
-          link /DLL /OUT:hv.dll ..\\cmake-build-win64\\bin\\hv.dll ..\\cmake-build-arm64\\bin\\hv.dll %LOCALAPPDATA%\\openssl\\lib\\libssl-1_1.dll %LOCALAPPDATA%\\openssl\\lib\\libcrypto-1_1.dll
+          link /DLL /OUT:hv.dll ..\cmake-build-win64\bin\Debug\hv.dll ..\cmake-build-arm64\bin\Debug\hv.dll %LOCALAPPDATA%\openssl\lib\libssl-1_1.dll %LOCALAPPDATA%\openssl\lib\libcrypto-1_1.dll
 
       - name: Upload dynamic library as release asset
         uses: actions/upload-release-asset@v1
@@ -240,12 +240,15 @@ jobs:
           make
       - name: Merge shared libraries into one shared library
         run: |
-          tree
           cd libhv/build_libs
           $ANDROID_NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64/bin/ld -shared -o libhv.so \
             ../build-android-armv7a/lib/libhv.so \
             ../build-android-armv8a-arm64/lib/libhv.so \
-            ../build-android-x86_64/lib/libhv.so
+            ../build-android-x86_64/lib/libhv.so \
+            -L$ANDROID_NDK_HOME/sources/cxx-stl/llvm-libc++/libs/armeabi-v7a \
+            -L$ANDROID_NDK_HOME/sources/cxx-stl/llvm-libc++/libs/arm64-v8a \
+            -L$ANDROID_NDK_HOME/sources/cxx-stl/llvm-libc++/libs/x86_64 \
+            -lc++_shared
 
       - name: Upload the .so file as a release asset
         uses: actions/upload-release-asset@v1
