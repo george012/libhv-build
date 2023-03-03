@@ -220,7 +220,7 @@ jobs:
           unzip -q ndk.zip -d $ANDROID_NDK_HOME
           rm ndk.zip
           cd libhv
-          for abi in "${{ matrix.abi[@] }}"; do
+          for abi in "${{ matrix.abi }}"; do
             mkdir -p build-android-$abi && cd build-android-$abi
             cmake .. -DCMAKE_TOOLCHAIN_FILE=$ANDROID_NDK_HOME/build/cmake/android.toolchain.cmake -DANDROID_ABI=$abi -DANDROID_NATIVE_API_LEVEL=21 -DANDROID_STL=c++_shared
             make
@@ -230,9 +230,10 @@ jobs:
       - name: Merge shared libraries into one shared library
         run: |
           cd libhv/build_libs
-          mkdir -p build-android-armv7a-armv8a
-          $ANDROID_NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64/bin/ld -shared -o ./build-android-armv7a-armv8a/libhv.so ../build-android-armv7a/lib/libhv.so ../build-android-armv8a-arm64/lib/libhv.so
-          $ANDROID_NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64/bin/ld -shared -o libhv.so ./build-android-armv7a-armv8a/libhv.so ../build-android-x86_64/lib/libhv.so
+          $ANDROID_NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64/bin/ld -shared -o libhv.so \
+            ./build-android-armv7a/lib/libhv.so \
+            ./build-android-armv8a-arm64/lib/libhv.so \
+            ./build-android-x86_64/lib/libhv.so
 
       - name: Upload the .so file as a release asset
         uses: actions/upload-release-asset@v1
