@@ -69,7 +69,6 @@ jobs:
           mkdir build-x86_64 && cd build-x86_64
           cmake .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=./install -DBUILD_SHARED_LIBS=ON -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DCMAKE_OSX_ARCHITECTURES="x86_64"
           make -j$(nproc) VERBOSE=1
-          tree
 
       - name: build arm64
         run: |
@@ -77,12 +76,11 @@ jobs:
           mkdir build-arm64 && cd build-arm64
           cmake .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=./install -DBUILD_SHARED_LIBS=ON -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DCMAKE_OSX_ARCHITECTURES="arm64"
           make -j$(nproc) VERBOSE=1
-          tree
 
       - name: merge libs
         run: |
           cd ./build_libs
-          ld -shared -o libhv.so ../build-arm64/lib/libhv.so ../build-x86_64/lib/libhv.so
+          ld -shared -o libhv.so ../libhv/build-arm64/lib/libhv.so ../libhv/build-x86_64/lib/libhv.so
 
       - name: Upload dynamic library as release asset
         uses: actions/upload-release-asset@v1
@@ -211,14 +209,13 @@ jobs:
       - name: Merge shared libraries into one shared library
         run: |
           cd libhv/build_libs
-          tree
           $ANDROID_NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64/bin/ld \
               -shared \
               -soname libhv.so \
               -o libhv.so \
               libhv_armv7a.so \
               libhv_armv8a.so \
-              libhv_x86_64.so
+              libhv_x86_64.so \
 
       - name: Upload the .so file as a release asset
         uses: actions/upload-release-asset@v1
