@@ -107,7 +107,7 @@ jobs:
       - name: install dependencies
         run: |
           choco install -y openssl.light
-          mkdir -p ./libhv/build_libs
+          mkdir -p libhv/build_libs
 
       - name: build x64
         run: |
@@ -127,8 +127,8 @@ jobs:
 
       - name: merge DLLs
         run: |
-          cd ./libhv/build_libs
-          link /DLL /OUT:hv.dll ../cmake-build-win64/bin/hv.dll ../cmake-build-arm64/bin/hv.dll libssl-1_1.dll libcrypto-1_1.dll
+          cd libhv/build_libs
+          link /DLL /OUT:hv.dll ..\cmake-build-win64\bin\hv.dll ..\cmake-build-arm64\bin\hv.dll %LOCALAPPDATA%\openssl\lib\libssl-1_1.dll %LOCALAPPDATA%\openssl\lib\libcrypto-1_1.dll
 
       - name: Upload dynamic library as release asset
         uses: actions/upload-release-asset@v1
@@ -157,7 +157,7 @@ jobs:
       - name: install dependencies
         run: |
           brew install openssl@1.1 nghttp2 cmake
-          makdir -p ./libhv/build_libs
+          mkdir -p libhv/build_libs
 
       - name: build x86_64 and arm64
         run: |
@@ -175,7 +175,7 @@ jobs:
 
       - name: merge dylibs and fix @rpath
         run: |
-          cd ./libhv/build_libs
+          cd libhv/build_libs
           lipo -create -output libhv.dylib ../build-x86_64/install/lib/libhv.dylib ../build-arm64/install/lib/libhv.dylib
           install_name_tool -id @rpath/libhv.dylib libhv.dylib
           install_name_tool -change /usr/local/opt/openssl@1.1/lib/libssl.1.1.dylib @rpath/libssl.1.1.dylib libhv.dylib
@@ -208,7 +208,8 @@ jobs:
         run: |
           sudo apt update
           sudo apt install -y build-essential cmake git
-          sudo apt install -y wget zip unzip tar
+          sudo apt install -y wget zip unzip tar tree
+
       - name: Install Android NDK
         run: |
           mkdir -p $HOME/android-sdk/ndk
@@ -218,6 +219,7 @@ jobs:
           export ANDROID_NDK_HOME=$HOME/android-sdk/ndk
           export PATH=$PATH:$ANDROID_NDK_HOME
           mkdir -p libhv/build_libs
+
       - name: Build dynamic library for Android-armv7a
         run: |
           cd libhv
@@ -238,6 +240,7 @@ jobs:
           make
       - name: Merge shared libraries into one shared library
         run: |
+          tree
           cd libhv/build_libs
           $ANDROID_NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64/bin/ld -shared -o libhv.so \
             ./build-android-armv7a/lib/libhv.so \
