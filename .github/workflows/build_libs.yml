@@ -61,7 +61,7 @@ jobs:
           sudo apt update
           sudo apt install -y build-essential cmake git
           sudo apt install libssl-dev libnghttp2-dev tree
-          mkdir -p ./build_libs
+          mkdir -p ./libhv/build_libs
 
       - name: build x86_64
         run: |
@@ -79,7 +79,7 @@ jobs:
 
       - name: merge libs
         run: |
-          cd ./build_libs
+          cd ./libhv/build_libs
           ld -shared -o libhv.so ../libhv/build-arm64/lib/libhv.so ../libhv/build-x86_64/lib/libhv.so
 
       - name: Upload dynamic library as release asset
@@ -107,21 +107,35 @@ jobs:
       - name: install dependencies
         run: |
           choco install -y openssl.light
+          make -p ./libhv/build_libs
 
-      - name: build
+      - name: build x64
         run: |
           cd libhv
           mkdir cmake-build-win64
           cd cmake-build-win64
-          cmake .. -G "Visual Studio 17 2022" -A x64
+          cmake .. -G "Visual Studio 17 2022" -A x64  -DCMAKE_BUILD_TYPE=Release
           cmake --build .
+
+      - name: build arm64
+        run: |
+          cd libhv
+          mkdir cmake-build-arm64
+          cd cmake-build-arm64
+          cmake .. -G "Visual Studio 17 2022" -A ARM64 -DCMAKE_BUILD_TYPE=Release
+          cmake --build .
+
+      - name: merge DLLs
+        run: |
+          cd ./libhv/build_libs
+          lib.exe /out:hv.dll ../cmake-build-win64/bin/hv.dll ../cmake-build-arm64/bin/hv.dll libssl-1_1.dll libcrypto-1_1.dll
 
       - name: Upload dynamic library as release asset
         uses: actions/upload-release-asset@v1
         if: ${{ github.ref_type == 'tag' }}
         with:
           upload_url: ${{ needs.create-release.outputs.upload_url }}
-          asset_path: ./libhv/cmake-build-win64/bin/Debug/hv.dll
+          asset_path: ./libhv/build_libs/hv.dll
           asset_name: hv_windows_x64.dll
           asset_content_type: application/x-sharedlib
         env:
@@ -209,13 +223,7 @@ jobs:
       - name: Merge shared libraries into one shared library
         run: |
           cd libhv/build_libs
-          $ANDROID_NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64/bin/ld \
-              -shared \
-              -soname libhv.so \
-              -o libhv.so \
-              libhv_armv7a.so \
-              libhv_armv8a.so \
-              libhv_x86_64.so \
+          $ANDROID_NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64/bin/ld -o libhv.so ../build-android-armv7a/lib/libhv.so ../build-android-armv8a-arm64/lib/libhv.so ../build-android-x86_64/lib/libhv.so
 
       - name: Upload the .so file as a release asset
         uses: actions/upload-release-asset@v1
