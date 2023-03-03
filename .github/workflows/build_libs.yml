@@ -128,11 +128,7 @@ jobs:
       - name: merge DLLs
         run: |
           cd ./libhv/build_libs
-          set LIB_PATH=%cd%
-          cd ../cmake-build-win64/bin
-          lib.exe /OUT:hv.lib hv.obj
-          cd %LIB_PATH%
-          link /DLL /OUT:hv.dll ../cmake-build-win64/bin/hv.dll ../cmake-build-arm64/bin/hv.dll %LOCALAPPDATA%\openssl\lib\libssl-1_1-x64.dll %LOCALAPPDATA%\openssl\lib\libcrypto-1_1-x64.dll /LIBPATH:%LOCALAPPDATA%\openssl\lib
+          link /DLL /OUT:hv.dll ../cmake-build-win64/bin/hv.dll ../cmake-build-arm64/bin/hv.dll libssl-1_1.dll libcrypto-1_1.dll
 
       - name: Upload dynamic library as release asset
         uses: actions/upload-release-asset@v1
@@ -154,13 +150,14 @@ jobs:
     env:
       HOMEBREW_NO_AUTO_UPDATE: true
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           submodules: 'recursive'
 
       - name: install dependencies
         run: |
           brew install openssl@1.1 nghttp2 cmake
+          makdir -p ./libhv/build_libs
 
       - name: build x86_64 and arm64
         run: |
@@ -179,11 +176,7 @@ jobs:
       - name: merge dylibs and fix @rpath
         run: |
           cd ./libhv/build_libs
-          mkdir -p merge_tmp
-          cp ../build-x86_64/install/lib/libhv.dylib ./merge_tmp
-          cp ../build-arm64/install/lib/libhv.dylib ./merge_tmp
-          lipo -create -output ./merge_tmp/libhv.dylib ./merge_tmp/libhv.dylib ./merge_tmp/libhv.dylib
-          cd merge_tmp
+          lipo -create -output libhv.dylib ../build-x86_64/install/lib/libhv.dylib ../build-arm64/install/lib/libhv.dylib
           install_name_tool -id @rpath/libhv.dylib libhv.dylib
           install_name_tool -change /usr/local/opt/openssl@1.1/lib/libssl.1.1.dylib @rpath/libssl.1.1.dylib libhv.dylib
           install_name_tool -change /usr/local/opt/openssl@1.1/lib/libcrypto.1.1.dylib @rpath/libcrypto.1.1.dylib libhv.dylib
