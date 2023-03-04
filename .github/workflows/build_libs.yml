@@ -106,7 +106,7 @@ jobs:
 
       - name: install dependencies
         run: |
-          choco install -y openssl.light
+          choco install -y openssl.light tree
           mkdir -p libhv/build_libs
 
       - name: build x64
@@ -127,6 +127,7 @@ jobs:
 
       - name: merge DLLs
         run: |
+          tree
           cd libhv/build_libs
           link /DLL /OUT:hv.dll ../cmake-build-win64/bin/Debug/hv.dll ../cmake-build-arm64/bin/Debug/hv.dll %LOCALAPPDATA%/openssl/lib/libssl-1_1.dll %LOCALAPPDATA%/openssl/lib/libcrypto-1_1.dll
 
@@ -224,32 +225,28 @@ jobs:
         run: |
           cd libhv
           mkdir -p build-android-armv7a && cd build-android-armv7a
-          cmake .. -DCMAKE_TOOLCHAIN_FILE=$ANDROID_NDK_HOME/build/cmake/android.toolchain.cmake -DCMAKE_BUILD_TYPE=Release -DANDROID_ABI=armeabi-v7a -DANDROID_NATIVE_API_LEVEL=21 -DANDROID_STL=c++_shared
+          cmake .. -DCMAKE_TOOLCHAIN_FILE=$ANDROID_NDK_HOME/build/cmake/android.toolchain.cmake -DCMAKE_BUILD_TYPE=Release -DANDROID_ABI=armeabi-v7a -DANDROID_NATIVE_API_LEVEL=21
           make
       - name: Build dynamic library for Android-armv8a-arm64
         run: |
           cd libhv
           mkdir -p build-android-armv8a-arm64 && cd build-android-armv8a-arm64
-          cmake .. -DCMAKE_TOOLCHAIN_FILE=$ANDROID_NDK_HOME/build/cmake/android.toolchain.cmake -DCMAKE_BUILD_TYPE=Release -DANDROID_ABI=arm64-v8a -DANDROID_NATIVE_API_LEVEL=21 -DANDROID_STL=c++_shared
+          cmake .. -DCMAKE_TOOLCHAIN_FILE=$ANDROID_NDK_HOME/build/cmake/android.toolchain.cmake -DCMAKE_BUILD_TYPE=Release -DANDROID_ABI=arm64-v8a -DANDROID_NATIVE_API_LEVEL=21
           make
       - name: Build dynamic library for Android-x86_64
         run: |
           cd libhv
           mkdir -p build-android-x86_64 && cd build-android-x86_64
-          cmake .. -DCMAKE_TOOLCHAIN_FILE=$ANDROID_NDK_HOME/build/cmake/android.toolchain.cmake -DCMAKE_BUILD_TYPE=Release -DANDROID_ABI=x86_64 -DANDROID_NATIVE_API_LEVEL=21 -DANDROID_STL=c++_shared
+          cmake .. -DCMAKE_TOOLCHAIN_FILE=$ANDROID_NDK_HOME/build/cmake/android.toolchain.cmake -DCMAKE_BUILD_TYPE=Release -DANDROID_ABI=x86_64 -DANDROID_NATIVE_API_LEVEL=21
           make
       - name: Merge shared libraries into one shared library
         run: |
           cd libhv/build_libs
-          export LD_LIBRARY_PATH=$ANDROID_NDK_HOME/sources/cxx-stl/llvm-libc++/libs/armeabi-v7a:$ANDROID_NDK_HOME/sources/cxx-stl/llvm-libc++/libs/arm64-v8a:$ANDROID_NDK_HOME/sources/cxx-stl/llvm-libc++/libs/x86_64
           $ANDROID_NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64/bin/ld -shared -o libhv.so \
             ../build-android-armv7a/lib/libhv.so \
             ../build-android-armv8a-arm64/lib/libhv.so \
             ../build-android-x86_64/lib/libhv.so \
-            -L$ANDROID_NDK_HOME/sources/cxx-stl/llvm-libc++/libs/armeabi-v7a \
-            -L$ANDROID_NDK_HOME/sources/cxx-stl/llvm-libc++/libs/arm64-v8a \
-            -L$ANDROID_NDK_HOME/sources/cxx-stl/llvm-libc++/libs/x86_64 \
-            -lc++_shared
+
 
       - name: Upload the .so file as a release asset
         uses: actions/upload-release-asset@v1
