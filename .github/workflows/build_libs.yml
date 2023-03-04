@@ -114,7 +114,7 @@ jobs:
           cd libhv
           mkdir cmake-build-win64
           cd cmake-build-win64
-          cmake .. -G "Visual Studio 17 2022" -A x64  -DCMAKE_BUILD_TYPE=Release
+          cmake .. -G "Visual Studio 17 2022" -A x64
           cmake --build .
 
       - name: build arm64
@@ -122,13 +122,13 @@ jobs:
           cd libhv
           mkdir cmake-build-arm64
           cd cmake-build-arm64
-          cmake .. -G "Visual Studio 17 2022" -A ARM64 -DCMAKE_BUILD_TYPE=Release
+          cmake .. -G "Visual Studio 17 2022" -A ARM64
           cmake --build .
 
       - name: merge DLLs
         run: |
           cd libhv/build_libs
-          link /DLL /OUT:hv.dll ..\cmake-build-win64\bin\Debug\hv.dll ..\cmake-build-arm64\bin\Debug\hv.dll %LOCALAPPDATA%\openssl\lib\libssl-1_1.dll %LOCALAPPDATA%\openssl\lib\libcrypto-1_1.dll
+          link /DLL /OUT:hv.dll ../cmake-build-win64/bin/Debug/hv.dll ../cmake-build-arm64/bin/Debug/hv.dll %LOCALAPPDATA%/openssl/lib/libssl-1_1.dll %LOCALAPPDATA%/openssl/lib/libcrypto-1_1.dll
 
       - name: Upload dynamic library as release asset
         uses: actions/upload-release-asset@v1
@@ -241,6 +241,7 @@ jobs:
       - name: Merge shared libraries into one shared library
         run: |
           cd libhv/build_libs
+          export LD_LIBRARY_PATH=$ANDROID_NDK_HOME/sources/cxx-stl/llvm-libc++/libs/armeabi-v7a:$ANDROID_NDK_HOME/sources/cxx-stl/llvm-libc++/libs/arm64-v8a:$ANDROID_NDK_HOME/sources/cxx-stl/llvm-libc++/libs/x86_64
           $ANDROID_NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64/bin/ld -shared -o libhv.so \
             ../build-android-armv7a/lib/libhv.so \
             ../build-android-armv8a-arm64/lib/libhv.so \
