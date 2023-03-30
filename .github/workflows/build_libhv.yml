@@ -19,24 +19,20 @@ jobs:
       - name: Check if build is required
         id: check-build-need
         run: |
-          wget --no-check-certificate https://raw.githubusercontent.com/george012/gt_script/master/github_repo_version_scan.sh \
-          && wait \
-          && chmod a+x ./github_repo_version_scan.sh \
-          && wait \
-          && build_need=$(./github_repo_version_scan.sh --check_need_update github.com/$GITHUB_REPOSITORY github.com/ithewei/libhv) \
-          && wait \
-          && remote_latest_version=$(./github_repo_version_scan.sh --get_latest_version github.com/ithewei/libhv) \
-          && wait \
-          && NEED_BUILD=$build_need \
-          && wait \
-          && REMOTE_LATEST_VERSION=$remote_latest_version
-
+          wget --no-check-certificate https://raw.githubusercontent.com/george012/gt_script/master/github_repo_version_scan.sh
+          chmod a+x ./github_repo_version_scan.sh
+          build_need=$(./github_repo_version_scan.sh --check_need_update github.com/$GITHUB_REPOSITORY github.com/ithewei/libhv)
+          remote_latest_version=$(./github_repo_version_scan.sh --get_latest_version github.com/ithewei/libhv)
+          NEED_BUILD=$build_need
+          REMOTE_LATEST_VERSION=$remote_latest_version
 
       - name: Set up Git
         if: ${{ steps.check-build-need.outputs.NEED_BUILD }} == 'true'
         run: |
           git config --local user.email "${{ secrets.GITCONFIG_EMAIL }}"
           git config --local user.name "${{ secrets.GITCONFIG_NAME }}"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Create a new Git tag
         id: create-new-tag
