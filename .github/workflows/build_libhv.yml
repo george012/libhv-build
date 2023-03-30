@@ -62,10 +62,6 @@ jobs:
         id: step-create-release
         uses: softprops/action-gh-release@v1
         if: ${{ env.NEED_BUILD }} == 'true'
-        with:
-          name: Release ${{ needs.check-update.outputs.REMOTE_LATEST_VERSION }}
-          body: ${{ needs.check-update.outputs.REMOTE_LATEST_VERSION }}
-          tag_name: ${{ needs.check-update.outputs.REMOTE_LATEST_VERSION }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
