@@ -35,17 +35,17 @@ jobs:
           git config --local user.name "${{ secrets.GITCONFIG_NAME }}"
 
       - name: Create a new Git tag
-        needs: setting-git
-        if: env.NEED_BUILD == 'true'
         id: create-new-tag
+        if: env.NEED_BUILD == 'true'
+        needs: setting-git
         run: |
           git tag ${{ secrets.REMOTE_LATEST_VERSION }}
           git push origin ${{ secrets.REMOTE_LATEST_VERSION }}
 
       - name: Create Release
-        needs: create-new-tag
-        if: env.NEED_BUILD == 'true'
         id: step_create_release
+        if: env.NEED_BUILD == 'true'
+        needs: create-new-tag
         uses: ncipollo/release-action@v1
         with:
           allowUpdates: true
