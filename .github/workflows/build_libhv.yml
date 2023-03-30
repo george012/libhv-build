@@ -27,9 +27,9 @@ jobs:
           && wait \
           && remote_latest_version=$(./github_repo_version_scan.sh --get_latest_version github.com/ithewei/libhv) \
           && wait \
-          && echo "NEED_BUILD=$build_need" >> "$GITHUB_OUTPUT" \
+          && NEED_BUILD=$build_need \
           && wait \
-          && echo "REMOTE_LATEST_VERSION=$remote_latest_version" >> "$GITHUB_OUTPUT"
+          && REMOTE_LATEST_VERSION=$remote_latest_version
 
 
       - name: Set up Git
