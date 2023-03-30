@@ -4,15 +4,14 @@ on:
   workflow_dispatch:
   schedule:
     - cron: '0 * * * *' # 每小时检查一次
-env:
-  NEED_BUILD:
-  REMOTE_LATEST_VERSION:
 
 jobs:
   create-release:
     runs-on: ubuntu-latest
     outputs:
       upload_url: ${{ steps.step_create_release.outputs.upload_url }}
+      NEED_BUILD: ${{ steps.check-build-need.outputs.NEED_BUILD }}
+      REMOTE_LATEST_VERSION: ${{ steps.check-build-need.outputs.REMOTE_LATEST_VERSION }}
     steps:
       - name: Checkout Current Repository
         uses: actions/checkout@v3
@@ -31,6 +30,8 @@ jobs:
           && echo "NEED_BUILD=$build_need" >> $GITHUB_ENV \
           && wait \
           && echo "REMOTE_LATEST_VERSION=$remote_latest_version" >> $GITHUB_ENV
+          echo "NEED_BUILD=${{ env.NEED_BUILD }}" >> $GITHUB_ENV_FILE
+          echo "REMOTE_LATEST_VERSION=${{ env.REMOTE_LATEST_VERSION }}" >> $GITHUB_ENV_FILE
 
       - name: Set up Git
         if: env.NEED_BUILD == 'true'
@@ -46,7 +47,7 @@ jobs:
           git push origin ${{ env.REMOTE_LATEST_VERSION }}
 
       - name: Create Release
-        id: step-create-release
+        id: step_create_release
         if: env.NEED_BUILD == 'true'
         uses: ncipollo/release-action@v1
         with:
@@ -55,8 +56,8 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   build-linux:
-    name: build-linux
-    if: ${{ env.NEED_BUILD }} == 'true'
+    name: build-linux  
+    if: ${{ needs.create-release.outputs.NEED_BUILD }} == 'true'
     needs: create-release
     runs-on: ubuntu-latest
     permissions:
@@ -105,7 +106,7 @@ jobs:
 
   build-windows:
     name: build-windows
-    if: ${{ env.NEED_BUILD }} == 'true'
+    if: ${{ needs.create-release.outputs.NEED_BUILD }} == 'true'
     needs: create-release
     runs-on: windows-latest
     permissions:
@@ -155,7 +156,7 @@ jobs:
 
   build-apple:
     name: build-apple
-    if: ${{ env.NEED_BUILD }} == 'true'
+    if: ${{ needs.create-release.outputs.NEED_BUILD }} == 'true'
     runs-on: macos-latest
     needs: create-release
     permissions:
@@ -208,7 +209,7 @@ jobs:
 
   build-android:
     name: build-android
-    if: ${{ env.NEED_BUILD }} == 'true'
+    if: ${{ needs.create-release.outputs.NEED_BUILD }} == 'true'
     needs: create-release
     runs-on: ubuntu-latest
     permissions:
