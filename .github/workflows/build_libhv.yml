@@ -42,13 +42,13 @@ jobs:
       - name: Bump version and push tag
         id: tag_version
         if: ${{ env.NEED_BUILD }} == 'true'
-        uses: mathieudutour/github-tag-action@latest
+        uses: mathieudutour/github-tag-action@v6.1
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Create a GitHub release
         if: ${{ env.NEED_BUILD }} == 'true'
-        uses: ncipollo/release-action@latest
+        uses: ncipollo/release-action@v1
         with:
           tag: ${{ steps.tag_version.outputs.new_tag }}
           name: Release ${{ steps.tag_version.outputs.new_tag }}
