@@ -1,12 +1,12 @@
-name: Cross-platform Build and Release
+name: Cross-platform Build libhv
 
 env:
   ProductName: libhv
 
 on:
-  push:
-    tags:
-      - v*
+  workflow_dispatch:
+  schedule:
+    - cron: '0 * * * *' # 每小时检查一次
 
 jobs:
   create-release:
@@ -14,30 +14,37 @@ jobs:
     outputs:
       upload_url: ${{ steps.step_create_release.outputs.upload_url }}
     steps:
-      - name: install github-cli
-        run: |
-          type -p curl >/dev/null || sudo apt install curl -y
-          curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | sudo dd of=/usr/share/keyrings/githubcli-archive-keyring.gpg \
-          && sudo chmod go+r /usr/share/keyrings/githubcli-archive-keyring.gpg \
-          && echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | sudo tee /etc/apt/sources.list.d/github-cli.list > /dev/null \
-          && sudo apt update \
-          && sudo apt install gh -y
-      - name: CheckOut
-        uses: actions/checkout@v3
+    - name: Checkout Current Repository
+      uses: actions/checkout@v3
 
-      - name: Check Old Version
-        run: |
-          APP_VERSION=$(echo ${GITHUB_REF} | rev | cut -d'/' -f 1 | rev ) \
-          && echo APP_OLD_VERSION=v$((${APP_VERSION:1}-2)) >> ${GITHUB_ENV}
+    - name: Check if build is required
+      id: check-build-need
+      run: |
+        wget --no-check-certificate https://raw.githubusercontent.com/george012/gt_script/master/github_repo_version_scan.sh
+        chmod a+x ./github_repo_version_scan.sh \
+        build_need=$(./github_repo_version_scan.sh --check_need_update github.com/$GITHUB_REPOSITORY github.com/ithewei/libhv)
+        echo "NEED_BUILD=$build_need" >> $GITHUB_ENV
+        remote_latest_version=$(./github_repo_version_scan.sh --check_need_update github.com/$GITHUB_REPOSITORY github.com/ithewei/libhv)
+        echo "REMOTE_LATEST_VERSION=$remote_latest_version" >> $GITHUB_ENV
 
-      - name: Delete Old Version
+      - name: Set up Git
+        id: setting-git
+        if: env.NEED_BUILD == 'true'
         run: |
-          gh release delete ${{ env.APP_OLD_VERSION }} -y
-          git push origin --delete ${{ env.APP_OLD_VERSION }}
-        env:
-          GH_TOKEN: ${{ github.token }}
+          git config --local user.email "${{ secrets.GITCONFIG_EMAIL }}"
+          git config --local user.name "${{ secrets.GITCONFIG_NAME }}"
+
+      - name: Create a new Git tag
+        needs: setting-git
+        if: env.NEED_BUILD == 'true'
+        id: create-new-tag
+        run: |
+          git tag ${{ secrets.REMOTE_LATEST_VERSION }}
+          git push origin ${{ secrets.REMOTE_LATEST_VERSION }}
 
       - name: Create Release
+        needs: create-new-tag
+        if: env.NEED_BUILD == 'true'
         id: step_create_release
         uses: ncipollo/release-action@v1
         with:
@@ -47,6 +54,7 @@ jobs:
 
   build-linux:
     name: build-linux
+    if: env.NEED_BUILD == 'true'
     needs: create-release
     runs-on: ubuntu-latest
     permissions:
@@ -95,6 +103,7 @@ jobs:
 
   build-windows:
     name: build-windows
+    if: env.NEED_BUILD == 'true'
     needs: create-release
     runs-on: windows-latest
     permissions:
@@ -124,24 +133,27 @@ jobs:
           cmake --build .
 
       - name: merge DLLs
+        shell: cmd
         run: |
           tree
           cd libhv/build_libs
-          link /DLL /OUT:hv.dll ../cmake-build-win64/bin/Debug/hv.dll ../cmake-build-arm64/bin/Debug/hv.dll %LOCALAPPDATA%/openssl/lib/libssl-1_1.dll %LOCALAPPDATA%/openssl/lib/libcrypto-1_1.dll
+          call "%VS_2022_PATH%\VC\Auxiliary\Build\vcvarsall.bat" x64
+          lib /OUT:hv.lib ..\cmake-build-win64\Debug\hv.lib ..\cmake-build-arm64\Debug\hv.lib
 
       - name: Upload dynamic library as release asset
         uses: actions/upload-release-asset@v1
         if: ${{ github.ref_type == 'tag' }}
         with:
           upload_url: ${{ needs.create-release.outputs.upload_url }}
-          asset_path: ./libhv/build_libs/hv.dll
-          asset_name: hv_windows_x64_arm64.dll
-          asset_content_type: application/x-sharedlib
+          asset_path: ./libhv/build_libs/hv.lib
+          asset_name: hv_windows_x64_arm64.lib
+          asset_content_type: application/x-archive
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   build-apple:
     name: build-apple
+    if: env.NEED_BUILD == 'true'
     runs-on: macos-latest
     needs: create-release
     permissions:
@@ -194,6 +206,7 @@ jobs:
 
   build-android:
     name: build-android
+    if: env.NEED_BUILD == 'true'
     needs: create-release
     runs-on: ubuntu-latest
     permissions:
@@ -243,12 +256,18 @@ jobs:
           make
           cp ./lib/libhv-x86_x64.so ../build_libs
 
-      - name: Upload the .so file as a release asset
+      - name: Zip the .so files
+        run: |
+          cd libhv/build_libs
+          zip libhv_android_all_archs.zip libhv-armeabi-v7a.so libhv-arm64-v8a.so libhv-x86_x64.so
+
+      - name: Upload the .zip file as a release asset
         uses: actions/upload-release-asset@v1
         if: ${{ github.ref_type == 'tag' }}
         with:
           upload_url: ${{ needs.create-release.outputs.upload_url }}
-          asset_path: ./libhv/build_libs/*
-          asset_content_type: application/octet-stream
+          asset_path: ./libhv/build_libs/libhv_android_all_archs.zip
+          asset_name: libhv_android_all_archs.zip
+          asset_content_type: application/zip
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
