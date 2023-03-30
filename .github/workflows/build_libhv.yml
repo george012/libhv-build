@@ -44,6 +44,7 @@ jobs:
         if: ${{ env.NEED_BUILD }} == 'true'
         uses: mathieudutour/github-tag-action@v6.1
         with:
+          tag_prefix: ""
           custom_tag: ${{ steps.check-build-need.outputs.REMOTE_LATEST_VERSION }}
           github_token: ${{ secrets.GITHUB_TOKEN }}
 
