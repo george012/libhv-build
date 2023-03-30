@@ -23,7 +23,7 @@ jobs:
           && wait \
           && build_need=$(./github_repo_version_scan.sh --check_need_update github.com/$GITHUB_REPOSITORY github.com/ithewei/libhv) \
           && wait \
-          && remote_latest_version=$(./github_repo_version_scan.sh --check_need_update github.com/$GITHUB_REPOSITORY github.com/ithewei/libhv) \
+          && remote_latest_version=$(./github_repo_version_scan.sh --get_latest_version github.com/ithewei/libhv) \
           && wait \
           && echo "NEED_BUILD=$build_need" >> $GITHUB_ENV \
           && wait \
@@ -43,8 +43,8 @@ jobs:
         id: create-new-tag
         if: env.NEED_BUILD == 'true'
         run: |
-          git tag ${{ secrets.REMOTE_LATEST_VERSION }}
-          git push origin ${{ secrets.REMOTE_LATEST_VERSION }}
+          git tag ${{ env.REMOTE_LATEST_VERSION }}
+          git push origin ${{ env.REMOTE_LATEST_VERSION }}
 
       - name: Create Release
         id: step-create-release
