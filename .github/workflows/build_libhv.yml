@@ -6,7 +6,7 @@ on:
     - cron: '0 * * * *' # 每小时检查一次
 
 jobs:
-  create-release:
+  check-update:
     runs-on: ubuntu-latest
     outputs:
       upload_url: ${{ steps.step_create_release.outputs.upload_url }}
@@ -37,16 +37,20 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Create a new Git tag
-        id: create-new-tag
-        if: ${{ env.NEED_BUILD }} == 'true'
-        run: |
-          git tag ${{ env.REMOTE_LATEST_VERSION }}
-          git push origin ${{ env.REMOTE_LATEST_VERSION }}
-
-      - name: Sleep for 60 seconds
-        run: sleep 60s
+      - name: Sleep for 30 seconds
+        run: sleep 30s
         shell: bash
+
+  create-release:
+    runs-on: ubuntu-latest
+    needs: check-update
+    outputs:
+      upload_url: ${{ needs.check-update.outputs.upload_url }}
+      NEED_BUILD: ${{ needs.check-update.outputs.NEED_BUILD }}
+      REMOTE_LATEST_VERSION: ${{ needs.check-update.outputs.REMOTE_LATEST_VERSION }}
+    steps:
+      - name: Checkout Current Repository
+        uses: actions/checkout@v3
 
       - name: Step Create Release
         id: step_create_release
