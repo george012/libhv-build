@@ -24,6 +24,8 @@ jobs:
           remote_latest_version=$(./github_repo_version_scan.sh --get_latest_version github.com/ithewei/libhv)
           echo "NEED_BUILD=$build_need" >> $GITHUB_ENV
           echo "REMOTE_LATEST_VERSION=$remote_latest_version" >> $GITHUB_ENV
+          echo "NEED_BUILD=$build_need" >> "$GITHUB_OUTPUT"
+          echo "REMOTE_LATEST_VERSION=$remote_latest_version" >> "$GITHUB_OUTPUT"
         env:
           NEED_BUILD: $build_need
           REMOTE_LATEST_VERSION: $remote_latest_version
