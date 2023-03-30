@@ -33,21 +33,21 @@ jobs:
 
 
       - name: Set up Git
-        if: env.NEED_BUILD == 'true'
+        if: ${{ steps.check-build-need.outputs.NEED_BUILD }} == 'true'
         run: |
           git config --local user.email "${{ secrets.GITCONFIG_EMAIL }}"
           git config --local user.name "${{ secrets.GITCONFIG_NAME }}"
 
       - name: Create a new Git tag
         id: create-new-tag
-        if: env.NEED_BUILD == 'true'
+        if: ${{ steps.check-build-need.outputs.NEED_BUILD }} == 'true'
         run: |
           git tag ${{ env.REMOTE_LATEST_VERSION }}
           git push origin ${{ env.REMOTE_LATEST_VERSION }}
 
       - name: Create Release
         id: step_create_release
-        if: env.NEED_BUILD == 'true'
+        if: ${{ steps.check-build-need.outputs.NEED_BUILD }} == 'true'
         uses: ncipollo/release-action@v1
         with:
           allowUpdates: true
