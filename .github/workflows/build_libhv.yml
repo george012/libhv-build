@@ -28,7 +28,6 @@ jobs:
           echo "REMOTE_LATEST_VERSION=$remote_latest_version" >> $GITHUB_ENV
 
       - name: Set up Git
-        id: setting-git
         if: env.NEED_BUILD == 'true'
         run: |
           git config --local user.email "${{ secrets.GITCONFIG_EMAIL }}"
@@ -37,15 +36,13 @@ jobs:
       - name: Create a new Git tag
         id: create-new-tag
         if: env.NEED_BUILD == 'true'
-        needs: setting-git
         run: |
           git tag ${{ secrets.REMOTE_LATEST_VERSION }}
           git push origin ${{ secrets.REMOTE_LATEST_VERSION }}
 
       - name: Create Release
-        id: step_create_release
+        id: step-create-release
         if: env.NEED_BUILD == 'true'
-        needs: create-new-tag
         uses: ncipollo/release-action@v1
         with:
           allowUpdates: true
