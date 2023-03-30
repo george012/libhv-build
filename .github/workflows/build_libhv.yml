@@ -23,11 +23,14 @@ jobs:
           chmod a+x ./github_repo_version_scan.sh
           build_need=$(./github_repo_version_scan.sh --check_need_update github.com/$GITHUB_REPOSITORY github.com/ithewei/libhv)
           remote_latest_version=$(./github_repo_version_scan.sh --get_latest_version github.com/ithewei/libhv)
-          NEED_BUILD=$build_need
-          REMOTE_LATEST_VERSION=$remote_latest_version
+          echo "NEED_BUILD=$build_need" >> $GITHUB_ENV
+          echo "REMOTE_LATEST_VERSION=$remote_latest_version" >> $GITHUB_ENV
+        with:
+          NEED_BUILD: $build_need
+          REMOTE_LATEST_VERSION: $remote_latest_version
 
       - name: Set up Git
-        if: ${{ steps.check-build-need.outputs.NEED_BUILD }} == 'true'
+        if: ${{ env.NEED_BUILD }} == 'true'
         run: |
           git config --local user.email "${{ secrets.GITCONFIG_EMAIL }}"
           git config --local user.name "${{ secrets.GITCONFIG_NAME }}"
@@ -36,7 +39,7 @@ jobs:
 
       - name: Create a new Git tag
         id: create-new-tag
-        if: ${{ steps.check-build-need.outputs.NEED_BUILD }} == 'true'
+        if: ${{ env.NEED_BUILD }} == 'true'
         run: |
           git tag ${{ env.REMOTE_LATEST_VERSION }}
           git push origin ${{ env.REMOTE_LATEST_VERSION }}
