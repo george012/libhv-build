@@ -44,6 +44,10 @@ jobs:
           git tag ${{ env.REMOTE_LATEST_VERSION }}
           git push origin ${{ env.REMOTE_LATEST_VERSION }}
 
+      - name: Sleep for 10 seconds
+        run: sleep 10s
+        shell: bash
+
       - name: Create Release
         id: step_create_release
         if: ${{ env.NEED_BUILD }} == 'true'
