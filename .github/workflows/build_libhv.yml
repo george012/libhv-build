@@ -44,8 +44,8 @@ jobs:
           git tag ${{ env.REMOTE_LATEST_VERSION }}
           git push origin ${{ env.REMOTE_LATEST_VERSION }}
 
-      - name: Sleep for 30 seconds
-        run: sleep 30s
+      - name: Sleep for 60 seconds
+        run: sleep 60s
         shell: bash
 
       - name: Step Create Release
