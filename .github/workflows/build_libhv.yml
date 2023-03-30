@@ -1,8 +1,5 @@
 name: Cross-platform Build libhv
 
-env:
-  ProductName: libhv
-
 on:
   workflow_dispatch:
   schedule:
@@ -20,12 +17,17 @@ jobs:
       - name: Check if build is required
         id: check-build-need
         run: |
-          wget --no-check-certificate https://raw.githubusercontent.com/george012/gt_script/master/github_repo_version_scan.sh
-          chmod a+x ./github_repo_version_scan.sh \
-          build_need=$(./github_repo_version_scan.sh --check_need_update github.com/$GITHUB_REPOSITORY github.com/ithewei/libhv)
-          echo "NEED_BUILD=$build_need" >> $GITHUB_ENV
-          remote_latest_version=$(./github_repo_version_scan.sh --check_need_update github.com/$GITHUB_REPOSITORY github.com/ithewei/libhv)
-          echo "REMOTE_LATEST_VERSION=$remote_latest_version" >> $GITHUB_ENV
+          wget --no-check-certificate https://raw.githubusercontent.com/george012/gt_script/master/github_repo_version_scan.sh \
+          && wait \
+          && chmod a+x ./github_repo_version_scan.sh \
+          && wait \
+          && build_need=$(./github_repo_version_scan.sh --check_need_update github.com/$GITHUB_REPOSITORY github.com/ithewei/libhv) \
+          && wait \
+          && remote_latest_version=$(./github_repo_version_scan.sh --check_need_update github.com/$GITHUB_REPOSITORY github.com/ithewei/libhv) \
+          && wait \
+          && echo "NEED_BUILD=$build_need" >> $GITHUB_ENV \
+          && wait \
+          && echo "REMOTE_LATEST_VERSION=$remote_latest_version" >> $GITHUB_ENV
 
       - name: Set up Git
         if: env.NEED_BUILD == 'true'
