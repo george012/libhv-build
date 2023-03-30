@@ -14,7 +14,7 @@ jobs:
       REMOTE_LATEST_VERSION: ${{ steps.check-build-need.outputs.REMOTE_LATEST_VERSION }}
     steps:
       - name: Checkout Current Repository
-        uses: actions/checkout@latest
+        uses: actions/checkout@v3
 
       - name: Check if build is required
         id: check-build-need
