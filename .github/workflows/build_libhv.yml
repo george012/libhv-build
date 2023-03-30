@@ -14,18 +14,18 @@ jobs:
     outputs:
       upload_url: ${{ steps.step_create_release.outputs.upload_url }}
     steps:
-    - name: Checkout Current Repository
-      uses: actions/checkout@v3
+      - name: Checkout Current Repository
+        uses: actions/checkout@v3
 
-    - name: Check if build is required
-      id: check-build-need
-      run: |
-        wget --no-check-certificate https://raw.githubusercontent.com/george012/gt_script/master/github_repo_version_scan.sh
-        chmod a+x ./github_repo_version_scan.sh \
-        build_need=$(./github_repo_version_scan.sh --check_need_update github.com/$GITHUB_REPOSITORY github.com/ithewei/libhv)
-        echo "NEED_BUILD=$build_need" >> $GITHUB_ENV
-        remote_latest_version=$(./github_repo_version_scan.sh --check_need_update github.com/$GITHUB_REPOSITORY github.com/ithewei/libhv)
-        echo "REMOTE_LATEST_VERSION=$remote_latest_version" >> $GITHUB_ENV
+      - name: Check if build is required
+        id: check-build-need
+        run: |
+          wget --no-check-certificate https://raw.githubusercontent.com/george012/gt_script/master/github_repo_version_scan.sh
+          chmod a+x ./github_repo_version_scan.sh \
+          build_need=$(./github_repo_version_scan.sh --check_need_update github.com/$GITHUB_REPOSITORY github.com/ithewei/libhv)
+          echo "NEED_BUILD=$build_need" >> $GITHUB_ENV
+          remote_latest_version=$(./github_repo_version_scan.sh --check_need_update github.com/$GITHUB_REPOSITORY github.com/ithewei/libhv)
+          echo "REMOTE_LATEST_VERSION=$remote_latest_version" >> $GITHUB_ENV
 
       - name: Set up Git
         id: setting-git
