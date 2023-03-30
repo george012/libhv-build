@@ -57,7 +57,7 @@ jobs:
 
   build-linux:
     name: build-linux
-    if: env.NEED_BUILD == 'true'
+    if: needs.check-build-need.outputs.NEED_BUILD == 'true'
     needs: create-release
     runs-on: ubuntu-latest
     permissions:
@@ -106,7 +106,7 @@ jobs:
 
   build-windows:
     name: build-windows
-    if: env.NEED_BUILD == 'true'
+    if: needs.check-build-need.outputs.NEED_BUILD == 'true'
     needs: create-release
     runs-on: windows-latest
     permissions:
@@ -156,7 +156,7 @@ jobs:
 
   build-apple:
     name: build-apple
-    if: env.NEED_BUILD == 'true'
+    if: needs.check-build-need.outputs.NEED_BUILD == 'true'
     runs-on: macos-latest
     needs: create-release
     permissions:
@@ -209,7 +209,7 @@ jobs:
 
   build-android:
     name: build-android
-    if: env.NEED_BUILD == 'true'
+    if: needs.check-build-need.outputs.NEED_BUILD == 'true'
     needs: create-release
     runs-on: ubuntu-latest
     permissions:
