@@ -27,7 +27,11 @@ jobs:
           && wait \
           && echo "NEED_BUILD=$build_need" >> $GITHUB_ENV \
           && wait \
-          && echo "REMOTE_LATEST_VERSION=$remote_latest_version" >> $GITHUB_ENV
+          && echo "REMOTE_LATEST_VERSION=$remote_latest_version" >> $GITHUB_ENV \
+          && wait \
+          && echo "::set-output name=NEED_BUILD::$build_need" \
+          && wait \
+          && echo "::set-output name=REMOTE_LATEST_VERSION::$remote_latest_version"
 
       - name: Set up Git
         if: env.NEED_BUILD == 'true'
