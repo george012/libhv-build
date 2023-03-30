@@ -44,6 +44,7 @@ jobs:
         if: ${{ env.NEED_BUILD }} == 'true'
         uses: mathieudutour/github-tag-action@v6.1
         with:
+          custom_tag: ${{ steps.check-build-need.outputs.REMOTE_LATEST_VERSION }}
           github_token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Create a GitHub release
@@ -52,7 +53,6 @@ jobs:
         with:
           tag: ${{ steps.tag_version.outputs.new_tag }}
           name: Release ${{ steps.tag_version.outputs.new_tag }}
-          body: ${{ steps.tag_version.outputs.changelog }}
 
   build-linux:
     name: build-linux  
