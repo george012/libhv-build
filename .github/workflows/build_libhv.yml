@@ -69,15 +69,6 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Step Create Release
-        id: step-create-release
-        if: ${{ env.NEED_BUILD }} == 'true'
-        uses: ncipollo/release-action@v1
-        with:
-          allowUpdates: true
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
   build-linux:
     name: build-linux  
     if: ${{ needs.create-release.outputs.NEED_BUILD }} == 'true'
