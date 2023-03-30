@@ -52,8 +52,8 @@ jobs:
     needs: check-update
     outputs:
       upload_url: ${{ steps.step-create-release.outputs.upload_url }}
-      NEED_BUILD: ${{ need.check-update.outputs.NEED_BUILD }}
-      REMOTE_LATEST_VERSION: ${{ need.check-update.outputs.REMOTE_LATEST_VERSION }}
+      NEED_BUILD: ${{ needs.check-update.outputs.NEED_BUILD }}
+      REMOTE_LATEST_VERSION: ${{ needs.check-update.outputs.REMOTE_LATEST_VERSION }}
     steps:
       - name: Checkout Current Repository
         uses: actions/checkout@v3
