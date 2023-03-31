@@ -31,8 +31,18 @@ jobs:
           NEED_BUILD: $build_need
           REMOTE_LATEST_VERSION: $remote_latest_version
 
-      - name: Set up Git
+      - name: Check if tag and release already exist
+        id: check-tag-release
         if: ${{ env.NEED_BUILD }} == 'true'
+        run: |
+          existing_tag=$(git tag --list | grep -Fx "${{ env.REMOTE_LATEST_VERSION }}")
+          existing_release=$(gh release list --repo $GITHUB_REPOSITORY | awk '{print $2}' | grep -Fx "${{ env.REMOTE_LATEST_VERSION }}")
+          if [[ -n "$existing_tag" ]] || [[ -n "$existing_release" ]]; then
+            echo "SKIP_TAG_RELEASE=true" >> $GITHUB_ENV
+          fi
+
+      - name: Set up Git
+        if: ${{ env.NEED_BUILD }} == 'true' && ${{ env.SKIP_TAG_RELEASE }} != 'true'
         run: |
           git config --local user.email "${{ secrets.GITCONFIG_EMAIL }}"
           git config --local user.name "${{ secrets.GITCONFIG_NAME }}"
@@ -41,7 +51,7 @@ jobs:
 
       - name: Bump version and push tag
         id: tag_version
-        if: ${{ env.NEED_BUILD }} == 'true'
+        if: ${{ env.NEED_BUILD }} == 'true' && ${{ env.SKIP_TAG_RELEASE }} != 'true'
         uses: mathieudutour/github-tag-action@v6.1
         with:
           tag_prefix: ""
@@ -49,7 +59,7 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Create a GitHub release
-        if: ${{ env.NEED_BUILD }} == 'true'
+        if: ${{ env.NEED_BUILD }} == 'true' && ${{ env.SKIP_TAG_RELEASE }} != 'true'
         uses: ncipollo/release-action@v1
         with:
           tag: ${{ steps.tag_version.outputs.new_tag }}
