@@ -32,7 +32,7 @@ jobs:
       - name: Check for existing release
         if: ${{ env.NEED_BUILD }} == "true"
         id: check-release-existing
-        uses: actions/github-script@v5
+        uses: actions/github-script@v6
         with:
           script: |
             const response = await github.rest.repos.listReleases({
@@ -226,7 +226,7 @@ jobs:
 
       - name: Check for existing asset
         id: check_asset_existing
-        uses: actions/github-script@v5
+        uses: actions/github-script@v6
         with:
           script: |
             const response = await github.rest.repos.getReleaseByTag({
@@ -311,7 +311,7 @@ jobs:
 
       - name: Check for existing asset
         id: check_asset_existing
-        uses: actions/github-script@v5
+        uses: actions/github-script@v6
         with:
           script: |
             const response = await github.rest.repos.getReleaseByTag({
@@ -431,7 +431,7 @@ jobs:
 
       - name: Check for existing asset
         id: check_asset_existing
-        uses: actions/github-script@v5
+        uses: actions/github-script@v6
         with:
           script: |
             const response = await github.rest.repos.getReleaseByTag({
