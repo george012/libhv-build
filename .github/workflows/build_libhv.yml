@@ -182,7 +182,7 @@ jobs:
           
       - name: Check for existing asset
         id: check_asset_existing
-        shell: powershell
+        shell: pwsh
         run: |
           Invoke-WebRequest -Uri https://raw.githubusercontent.com/george012/gt_script/master/github_repo_version_scan.ps1 -OutFile github_repo_version_scan.ps1
           Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
@@ -390,3 +390,72 @@ jobs:
           asset_content_type: application/zip
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+build-ios:
+  name: build-ios
+  needs: create-release
+  if: ${{ needs.create-release.outputs.NEED_BUILD }} == "yes"
+  runs-on: macos-latest
+  permissions:
+    contents: write
+  env:
+    HOMEBREW_NO_AUTO_UPDATE: true
+  steps:
+    - name: Handle ENV PATH
+      run: |
+        echo "NEED_BUILD=${{ needs.create-release.outputs.NEED_BUILD }}" >> $GITHUB_ENV
+        echo "REMOTE_LATEST_VERSION=${{ needs.create-release.outputs.REMOTE_LATEST_VERSION }}" >> $GITHUB_ENV
+        echo "upload_url=${{ needs.create-release.outputs.upload_url }}" >> $GITHUB_ENV
+
+    - uses: actions/checkout@v3
+      with:
+        submodules: 'recursive'
+
+    - name: install dependencies
+      run: |
+        brew install openssl@1.1 nghttp2 cmake
+        mkdir -p libhv/build_libs
+
+    - name: build x86_64 and arm64
+      run: |
+        cd libhv
+        build() {
+          arch=$1
+          mkdir -p build-$arch && cd build-$arch
+          cmake .. -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=ON -DCMAKE_INSTALL_PREFIX=./install -DCMAKE_OSX_ARCHITECTURES="$arch" -DCMAKE_SYSTEM_NAME=iOS
+          make -j$(sysctl -n hw.physicalcpu) VERBOSE=1
+          make install
+          cd ..
+        }
+        build x86_64
+        build arm64
+
+    - name: create framework
+      run: |
+        cd libhv/build_libs
+        mkdir -p libhv.framework/Headers
+        lipo -create -output libhv.framework/libhv ../build-x86_64/install/lib/libhv.dylib ../build-arm64/install/lib/libhv.dylib
+        cp ../include/hv/* libhv.framework/Headers
+        zip -q -r libhv_ios_framework.zip libhv.framework
+        echo "over_file_name=libhv_ios_framework.zip" >> $GITHUB_ENV
+
+    - name: Check for existing asset
+      id: check_asset_existing
+      run: |
+        wget --no-check-certificate https://raw.githubusercontent.com/george012/gt_script/master/github_repo_version_scan.sh
+        chmod a+x ./github_repo_version_scan.sh
+        file_exist=$(./github_repo_version_scan.sh --check_file_exist_from_repo_latest github.com/$GITHUB_REPOSITORY ${{ env.over_file_name }})
+        echo "file_exist=$file_exist" >> $GITHUB_ENV
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Upload framework as release asset
+      if: ${{ env.file_exist }} != "yes"
+      uses: actions/upload-release-asset@v1
+      with:
+        upload_url: ${{ needs.create-release.outputs.upload_url }}
+        asset_path: ./libhv/build_libs/${{ env.over_file_name }}
+        asset_name: ${{ env.over_file_name }}
+        asset_content_type: application/zip
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
