@@ -223,7 +223,7 @@ jobs:
           cd libhv/build_libs
           mkdir -p ./libhv/include
           cp ../build-MAC_UNIVERSAL/include/hv/* ./libhv/include
-          cp ./build-MAC_UNIVERSAL/lib/Release/libhv.dylib ./libhv/
+          cp ../build-MAC_UNIVERSAL/lib/Release/libhv.dylib ./libhv/
           zip -q -r libhv_apple_universal.zip ./libhv
           echo "over_file_name=libhv_apple_universal.zip" >> $GITHUB_ENV
 
