@@ -181,11 +181,12 @@ jobs:
 
       - name: Check for existing asset
         id: check_asset_existing
+        shell: powershell
         run: |
-            wget --no-check-certificate https://raw.githubusercontent.com/george012/gt_script/master/github_repo_version_scan.sh
-            chmod a+x ./github_repo_version_scan.sh
-            file_exist=$(./github_repo_version_scan.sh --check_file_exist_from_repo_latest github.com/$GITHUB_REPOSITORY ${{ env.over_file_name }})
-            echo "file_exist=$file_exist" >> $GITHUB_ENV
+          Invoke-WebRequest -Uri https://raw.githubusercontent.com/george012/gt_script/master/github_repo_version_scan.sh -OutFile github_repo_version_scan.sh
+          Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
+          $file_exist = & ./github_repo_version_scan.sh --check_file_exist_from_repo_latest github.com/$env:GITHUB_REPOSITORY $env:over_file_name
+          echo "file_exist=$file_exist" | Out-File -FilePath $env:GITHUB_ENV -Append
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -316,28 +317,35 @@ jobs:
       - name: Build dynamic library for Android-armeabi-v7a
         run: |
           cd libhv
-          echo "android { abiFilters 'armeabi-v7a' }" > app/build.gradle
-          cmake -DCMAKE_TOOLCHAIN_FILE=$ANDROID_NDK_HOME/build/cmake/android.toolchain.cmake -DANDROID_ABI="armeabi-v7a" -DANDROID_PLATFORM=21 .
+          export CROSS_COMPILE=arm-linux-androideabi-
+          ./configure
           make clean
           make libhv
-          mkdir -p ./build_libs/
           cp ./lib/libhv.so ./build_libs/libhv-armeabi-v7a.so
 
       - name: Build dynamic library for Android-armv8a-arm64
         run: |
           cd libhv
-          echo "android { abiFilters 'arm64-v8a' }" > app/build.gradle
-          cmake -DCMAKE_TOOLCHAIN_FILE=$ANDROID_NDK_HOME/build/cmake/android.toolchain.cmake -DANDROID_ABI="arm64-v8a" -DANDROID_PLATFORM=21 .
+          export CROSS_COMPILE=aarch64-linux-android-
+          ./configure
           make clean
           make libhv
-          mkdir -p ./build_libs/
           cp ./lib/libhv.so ./build_libs/libhv-arm64-v8a.so
+
+      - name: Build dynamic library for Android-x86
+        run: |
+          cd libhv
+          export CROSS_COMPILE=i686-linux-android-
+          ./configure
+          make clean
+          make libhv
+          cp ./lib/libhv.so ./build_libs/libhv-x86.so
 
       - name: Build dynamic library for Android-x86_64
         run: |
           cd libhv
-          echo "android { abiFilters 'x86_64' }" > app/build.gradle
-          cmake -DCMAKE_TOOLCHAIN_FILE=$ANDROID_NDK_HOME/build/cmake/android.toolchain.cmake -DANDROID_ABI="x86_64" -DANDROID_PLATFORM=21 .
+          export CROSS_COMPILE=x86_64-linux-android-
+          ./configure
           make clean
           make libhv
           cp ./lib/libhv.so ./build_libs/libhv-x86_x64.so
@@ -348,6 +356,7 @@ jobs:
           mkdir -p libhv/include
           mv libhv-armeabi-v7a.so ./libhv
           mv libhv-arm64-v8a.so ./libhv
+          mv libhv-x86.so ./libhv
           mv libhv-x86_x64.so ./libhv
           cp ../include/hv/* ./libhv/include
           zip -q -r libhv_android_v7a_v8a_x64.zip ./libhv
