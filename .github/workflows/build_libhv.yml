@@ -216,7 +216,7 @@ jobs:
 
       - name: merge dylibs and fix @rpath
         run: |
-          tree
+          tree -N
           cd libhv/build_libs
           lipo -create -output libhv.dylib ../build-x86_64/install/lib/libhv.dylib ../build-arm64/install/lib/libhv.dylib
           install_name_tool -id @rpath/libhv.dylib libhv.dylib
