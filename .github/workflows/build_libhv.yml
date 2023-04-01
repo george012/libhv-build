@@ -120,7 +120,6 @@ jobs:
 
       - name: merge libs
         run: |
-          tree
           cd ./libhv/build_libs
           mkdir -p ./lbhv/include
           ld -shared -o ./lbhv/libhv.so ../build-arm64/lib/libhv.so ../build-x86_64/lib/libhv.so
