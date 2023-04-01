@@ -42,10 +42,10 @@ jobs:
             const existing_release = response.data.find(release => release.tag_name === "${{ env.REMOTE_LATEST_VERSION }}");
             if (existing_release) {
               console.log("Existing release found:", existing_release.tag_name);
-              return false;
+              return "false";
             } else {
               console.log("No existing release found");
-              return true;
+              return "true";
             }
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -88,11 +88,11 @@ jobs:
 
       - name: handle Upload Url
         run: |
-          if [ ${{ env.NEED_BUILD }} == "true" ]; then
+          if [ ${{ env.NEED_BUILD }} == false ]; then
             echo "upload_url=${{ steps.step-create-release.outputs.upload_url }}" >> $GITHUB_ENV
           else
             upload_url=$(./github_repo_version_scan.sh --get_latest_upload_url github.com/$GITHUB_REPOSITORY)
-            echo "upload_url=$remote_latest_version" >> $GITHUB_ENV
+            echo "upload_url=$upload_url" >> $GITHUB_ENV
           fi
 
   build-linux:
