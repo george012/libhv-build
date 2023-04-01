@@ -221,7 +221,6 @@ jobs:
           cp ../cmake-build-arm64/bin/Debug/hv.dll libhv/arm64/
           cp ../include/hv/* ./libhv/include
           7z a libhv_windows_x64_arm64.zip ./libhv
-          zip -q -r libhv_windows_x64_arm64.zip ./libhv
           echo "over_file_name=libhv_windows_x64_arm64.zip" >> $GITHUB_ENV
 
       - name: Check for existing asset
