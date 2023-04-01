@@ -32,7 +32,7 @@ jobs:
           REMOTE_LATEST_VERSION: $remote_latest_version
 
       - name: Set up Git
-        if: ${{ env.NEED_BUILD }} == true
+        if: ${{ env.NEED_BUILD }} == "yes"
         run: |
           git config --local user.email "${{ secrets.GITCONFIG_EMAIL }}"
           git config --local user.name "${{ secrets.GITCONFIG_NAME }}"
@@ -41,7 +41,7 @@ jobs:
 
       - name: Bump version and push tag
         id: tag-version
-        if: ${{ env.NEED_BUILD }} == true
+        if: ${{ env.NEED_BUILD }} == "yes"
         uses: mathieudutour/github-tag-action@v6.1
         with:
           tag_prefix: ""
@@ -50,7 +50,7 @@ jobs:
 
       - name: Step GitHub release
         id: step-create-release
-        if: ${{ env.NEED_BUILD }} == true
+        if: ${{ env.NEED_BUILD }} == "yes"
         uses: ncipollo/release-action@v1
         with:
           skipIfReleaseExists: 'true'
@@ -59,14 +59,14 @@ jobs:
 
       - name: handle Upload Url
         run: |
-          if [ "${{ env.NEED_BUILD }}" == true ]; then
+          if [ "${{ env.NEED_BUILD }}" == "yes" ]; then
             echo "upload_url=${{ steps.step-create-release.outputs.upload_url }}" >> $GITHUB_ENV
           fi
 
   build-linux:
     name: build-linux  
     needs: create-release
-    if: ${{ needs.create-release.outputs.NEED_BUILD }} == true
+    if: ${{ needs.create-release.outputs.NEED_BUILD }} == "yes"
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -120,7 +120,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Upload dynamic library as release asset
-        if: ${{ env.file_exist }} != true
+        if: ${{ env.file_exist }} != "yes"
         uses: actions/upload-release-asset@v1
         with:
           upload_url: ${{ needs.create-release.outputs.upload_url }}
@@ -133,7 +133,7 @@ jobs:
   build-windows:
     name: build-windows
     needs: create-release
-    if: ${{ needs.create-release.outputs.NEED_BUILD }} == true
+    if: ${{ needs.create-release.outputs.NEED_BUILD }} == "yes"
     runs-on: windows-2022
     permissions:
       contents: write
@@ -190,7 +190,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Upload dynamic library as release asset
-        if: ${{ env.file_exist }} != true
+        if: ${{ env.file_exist }} != "yes"
         uses: actions/upload-release-asset@v1
         with:
           upload_url: ${{ needs.create-release.outputs.upload_url }}
@@ -203,7 +203,7 @@ jobs:
   build-apple:
     name: build-apple
     needs: create-release
-    if: ${{ needs.create-release.outputs.NEED_BUILD }} == true
+    if: ${{ needs.create-release.outputs.NEED_BUILD }} == "yes"
     runs-on: macos-latest
     permissions:
       contents: write
@@ -264,7 +264,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Upload dynamic library as release asset
-        if: ${{ env.file_exist }} != true
+        if: ${{ env.file_exist }} != "yes"
         uses: actions/upload-release-asset@v1
         with:
           upload_url: ${{ needs.create-release.outputs.upload_url }}
@@ -277,7 +277,7 @@ jobs:
   build-android:
     name: build-android
     needs: create-release
-    if: ${{ needs.create-release.outputs.NEED_BUILD }} == true
+    if: ${{ needs.create-release.outputs.NEED_BUILD }} == "yes"
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -312,6 +312,16 @@ jobs:
           export ANDROID_NDK_HOME=$HOME/android-sdk/ndk
           export PATH=$PATH:$ANDROID_NDK_HOME
           mkdir -p libhv/build_libs
+
+      - name: Build dynamic library for Android-armeabi-v7a
+        run: |
+          cd libhv
+          echo "android { abiFilters 'armeabi-v7a' }" > app/build.gradle
+          cmake -DCMAKE_TOOLCHAIN_FILE=$ANDROID_NDK_HOME/build/cmake/android.toolchain.cmake -DANDROID_ABI="armeabi-v7a" -DANDROID_PLATFORM=21 .
+          make clean
+          make libhv
+          mkdir -p ./build_libs/
+          cp ./lib/libhv.so ./build_libs/libhv-armeabi-v7a.so
 
       - name: Build dynamic library for Android-armv8a-arm64
         run: |
@@ -354,7 +364,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Upload dynamic library as release asset
-        if: ${{ env.file_exist }} != true
+        if: ${{ env.file_exist }} != "yes"
         uses: actions/upload-release-asset@v1
         with:
           upload_url: ${{ needs.create-release.outputs.upload_url }}
