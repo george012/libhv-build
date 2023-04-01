@@ -90,14 +90,14 @@ jobs:
         run: |
           cd libhv
           mkdir build-x86_64 && cd build-x86_64
-          cmake .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=./install -DBUILD_SHARED_LIBS=ON -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DCMAKE_OSX_ARCHITECTURES="x86_64"
+          cmake .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=./install -DBUILD_SHARED=ON -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DCMAKE_OSX_ARCHITECTURES="x86_64"
           make -j$(nproc) VERBOSE=1
 
       - name: build arm64
         run: |
           cd libhv
           mkdir build-arm64 && cd build-arm64
-          cmake .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=./install -DBUILD_SHARED_LIBS=ON -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DCMAKE_OSX_ARCHITECTURES="arm64"
+          cmake .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=./install -DBUILD_SHARED=ON -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DCMAKE_OSX_ARCHITECTURES="arm64"
           make -j$(nproc) VERBOSE=1
 
       - name: merge libs
@@ -158,14 +158,14 @@ jobs:
         run: |
           cd libhv
           mkdir cmake-build-win64 && cd cmake-build-win64
-          cmake .. -G "Visual Studio 17 2022" -A x64
+          cmake .. -G "Visual Studio 17 2022" -A x64 -DBUILD_SHARED=ON
           cmake --build .
 
       - name: build arm64
         run: |
           cd libhv
           mkdir cmake-build-arm64 && cd cmake-build-arm64
-          cmake .. -G "Visual Studio 17 2022" -A ARM64
+          cmake .. -G "Visual Studio 17 2022" -A ARM64 -DBUILD_SHARED=ON
           cmake --build .
 
       - name: merge DLLs
@@ -236,7 +236,7 @@ jobs:
             archs=$2
             deployment_target=$3
             mkdir -p build-$platform && cd build-$platform
-            cmake .. -G Xcode -DCMAKE_TOOLCHAIN_FILE=../cmake/ios.toolchain.cmake -DPLATFORM="$platform" -DDEPLOYMENT_TARGET="$deployment_target" -DARCHS="$archs" -DBUILD_SHARED_LIBS=ON -DCMAKE_INSTALL_PREFIX=./install -DCMAKE_BUILD_TYPE=Release
+            cmake .. -G Xcode -DCMAKE_TOOLCHAIN_FILE=../cmake/ios.toolchain.cmake -DPLATFORM="$platform" -DDEPLOYMENT_TARGET="$deployment_target" -DARCHS="$archs" -DBUILD_SHARED=ON -DCMAKE_INSTALL_PREFIX=./install -DCMAKE_BUILD_TYPE=Release
             cmake --build . --config Release
             cd ..
           }
@@ -319,6 +319,7 @@ jobs:
           echo ${{ steps.setup-ndk.outputs.ndk-path }}
           cmake \
             -DCMAKE_TOOLCHAIN_FILE=${{ steps.setup-ndk.outputs.ndk-path }}/build/cmake/android.toolchain.cmake \
+            -DBUILD_SHARED=ON \
             -DCMAKE_BUILD_TYPE=Release \
             -DANDROID_ABI=armeabi-v7a ..
           cmake --build .
@@ -332,6 +333,7 @@ jobs:
           echo ${{ steps.setup-ndk.outputs.ndk-path }}
           cmake \
             -DCMAKE_TOOLCHAIN_FILE=${{ steps.setup-ndk.outputs.ndk-path }}/build/cmake/android.toolchain.cmake \
+            -DBUILD_SHARED=ON \
             -DCMAKE_BUILD_TYPE=Release \
             -DANDROID_ABI=arm64-v8a ..
           cmake --build .
@@ -344,6 +346,7 @@ jobs:
           echo ${{ steps.setup-ndk.outputs.ndk-path }}
           cmake \
             -DCMAKE_TOOLCHAIN_FILE=${{ steps.setup-ndk.outputs.ndk-path }}/build/cmake/android.toolchain.cmake \
+            -DBUILD_SHARED=ON \
             -DCMAKE_BUILD_TYPE=Release \
             -DANDROID_ABI=x86 ..
           cmake --build .
@@ -356,6 +359,7 @@ jobs:
           echo ${{ steps.setup-ndk.outputs.ndk-path }}
           cmake \
             -DCMAKE_TOOLCHAIN_FILE=${{ steps.setup-ndk.outputs.ndk-path }}/build/cmake/android.toolchain.cmake \
+            -DBUILD_SHARED=ON \
             -DCMAKE_BUILD_TYPE=Release \
             -DANDROID_ABI=x86_64 ..
           cmake --build .
