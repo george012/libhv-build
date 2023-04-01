@@ -30,7 +30,7 @@ jobs:
           REMOTE_LATEST_VERSION: $remote_latest_version
 
       - name: Check for existing release
-        if: ${{ env.NEED_BUILD }} == 'true'
+        if: ${{ env.NEED_BUILD }} == "true"
         id: check-release-existing
         uses: actions/github-script@v5
         with:
@@ -61,7 +61,7 @@ jobs:
           fi
 
       - name: Set up Git
-        if: ${{ env.NEED_BUILD }} == 'true'
+        if: ${{ env.NEED_BUILD }} == "true"
         run: |
           git config --local user.email "${{ secrets.GITCONFIG_EMAIL }}"
           git config --local user.name "${{ secrets.GITCONFIG_NAME }}"
@@ -70,7 +70,7 @@ jobs:
 
       - name: Bump version and push tag
         id: tag-version
-        if: ${{ env.NEED_BUILD }} == 'true'
+        if: ${{ env.NEED_BUILD }} == "true"
         uses: mathieudutour/github-tag-action@v6.1
         with:
           tag_prefix: ""
@@ -79,7 +79,7 @@ jobs:
 
       - name: Step GitHub release
         id: step-create-release
-        if: ${{ env.NEED_BUILD }} == 'true'
+        if: ${{ env.NEED_BUILD }} == "true"
         uses: ncipollo/release-action@v1
         with:
           skipIfReleaseExists: 'true'
@@ -88,7 +88,7 @@ jobs:
 
       - name: handle Upload Url
         run: |
-          if [ ${{ env.NEED_BUILD }} == 'true' ]; then
+          if [ ${{ env.NEED_BUILD }} == "true" ]; then
             echo "upload_url=${{ steps.step-create-release.outputs.upload_url }}" >> $GITHUB_ENV
           else
             upload_url=$(./github_repo_version_scan.sh --get_latest_upload_url github.com/$GITHUB_REPOSITORY)
@@ -97,7 +97,7 @@ jobs:
 
   build-linux:
     name: build-linux  
-    if: ${{ needs.create-release.outputs.NEED_BUILD }} == 'true'
+    if: ${{ needs.create-release.outputs.NEED_BUILD }} == "true"
     needs: create-release
     runs-on: ubuntu-latest
     permissions:
@@ -148,7 +148,7 @@ jobs:
 
   build-windows:
     name: build-windows
-    if: ${{ needs.create-release.outputs.NEED_BUILD }} == 'true'
+    if: ${{ needs.create-release.outputs.NEED_BUILD }} == "true"
     needs: create-release
     runs-on: windows-latest
     permissions:
@@ -197,7 +197,7 @@ jobs:
 
   build-apple:
     name: build-apple
-    if: ${{ needs.create-release.outputs.NEED_BUILD }} == 'true'
+    if: ${{ needs.create-release.outputs.NEED_BUILD }} == "true"
     runs-on: macos-latest
     needs: create-release
     permissions:
@@ -252,7 +252,7 @@ jobs:
 
   build-android:
     name: build-android
-    if: ${{ needs.create-release.outputs.NEED_BUILD }} == 'true'
+    if: ${{ needs.create-release.outputs.NEED_BUILD }} == "true"
     needs: create-release
     runs-on: ubuntu-latest
     permissions:
