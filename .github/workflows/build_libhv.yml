@@ -320,7 +320,7 @@ jobs:
             -DCMAKE_BUILD_TYPE=Release \
             -DANDROID_ABI=armeabi-v7a ..
           cmake --build .
-          cp ./lib/libhv.so ./build_libs/libhv-armeabi-v7a.so
+          cp ./build-armeabi-v7a/lib/libhv.so ./build_libs/libhv-armeabi-v7a.so
 
       - name: Build dynamic library for Android-armv8a-arm64
         run: |
@@ -332,7 +332,7 @@ jobs:
             -DCMAKE_BUILD_TYPE=Release \
             -DANDROID_ABI=arm64-v8a ..
           cmake --build .
-          cp ./lib/libhv.so ./build_libs/libhv-arm64-v8a.so
+          cp ./build-arm64-v8a/lib/libhv.so ./build_libs/libhv-arm64-v8a.so
 
       - name: Build dynamic library for Android-x86
         run: |
@@ -344,7 +344,7 @@ jobs:
             -DCMAKE_BUILD_TYPE=Release \
             -DANDROID_ABI=x86 ..
           cmake --build .
-          cp ./lib/libhv.so ./build_libs/libhv-x86.so
+          cp ./build-x86/lib/libhv.so ./build_libs/libhv-x86.so
 
       - name: Build dynamic library for Android-x86_64
         run: |
@@ -356,7 +356,7 @@ jobs:
             -DCMAKE_BUILD_TYPE=Release \
             -DANDROID_ABI=x86_64 ..
           cmake --build .
-          cp ./lib/libhv.so ./build_libs/libhv-x86_x64.so
+          cp ./build-x86_64/lib/libhv.so ./build_libs/libhv-x86_x64.so
 
       - name: Zip the .so files
         run: |
