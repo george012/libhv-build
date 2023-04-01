@@ -114,9 +114,9 @@ jobs:
           submodules: 'recursive'
       - name: install dependencies
         run: |
-           apt update
-           apt install -y build-essential cmake git
-           apt install libssl-dev libnghttp2-dev
+           sudo apt update
+           sudo apt install -y build-essential cmake git
+           sudo apt install libssl-dev libnghttp2-dev
            mkdir -p ./libhv/build_libs
 
       - name: build x86_64
@@ -361,9 +361,9 @@ jobs:
 
       - name: install dependencies
         run: |
-          apt update
-          apt install -y build-essential cmake git
-          apt install -y wget zip unzip tar tree
+          sudo apt update
+          sudo apt install -y build-essential cmake git
+          sudo apt install -y wget zip unzip tar tree
 
       - name: Set up JDK 1.8
         uses: actions/setup-java@v1
