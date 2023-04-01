@@ -9,7 +9,7 @@ jobs:
   create-release:
     runs-on: ubuntu-latest
     outputs:
-      upload_url: ${{ steps.step-create-release.outputs.upload_url }}
+      upload_url: ${{ env.upload_url }}
       NEED_BUILD: ${{ env.NEED_BUILD }}
       REMOTE_LATEST_VERSION: ${{ env.REMOTE_LATEST_VERSION }}
     steps:
@@ -57,7 +57,7 @@ jobs:
           else
             echo "NEED_BUILD=false" >> $GITHUB_ENV
             upload_url=$(./github_repo_version_scan.sh --get_latest_upload_url github.com/$GITHUB_REPOSITORY)
-            echo "upload_url=$remote_latest_version" >> $GITHUB_OUTPUT
+            echo "upload_url=$remote_latest_version" >> $GITHUB_ENV
           fi
 
       - name: Set up Git
@@ -69,7 +69,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Bump version and push tag
-        id: tag_version
+        id: tag-version
         if: ${{ env.NEED_BUILD }} == 'true'
         uses: mathieudutour/github-tag-action@v6.1
         with:
@@ -77,13 +77,23 @@ jobs:
           custom_tag: ${{ env.REMOTE_LATEST_VERSION }}
           github_token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Create a GitHub release
+      - name: Step GitHub release
+        id: step-create-release
         if: ${{ env.NEED_BUILD }} == 'true'
         uses: ncipollo/release-action@v1
         with:
           skipIfReleaseExists: 'true'
-          tag: ${{ steps.tag_version.outputs.new_tag }}
-          name: ${{ steps.tag_version.outputs.new_tag }}
+          tag: ${{ steps.tag-version.outputs.new_tag }}
+          name: ${{ steps.tag-version.outputs.new_tag }}
+
+      - name: handle Upload Url
+        run: |
+          if [ ${{ env.NEED_BUILD }} == 'true' ]; then
+            echo "upload_url=${{ steps.step-create-release.outputs.upload_url }}" >> $GITHUB_ENV
+          else
+            upload_url=$(./github_repo_version_scan.sh --get_latest_upload_url github.com/$GITHUB_REPOSITORY)
+            echo "upload_url=$remote_latest_version" >> $GITHUB_ENV
+          fi
 
   build-linux:
     name: build-linux  
