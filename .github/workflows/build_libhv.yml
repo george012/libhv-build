@@ -34,21 +34,26 @@ jobs:
       - name: Check for existing release
         if: ${{ env.NEED_BUILD }} == 'true'
         id: check-release-existing
+        uses: actions/github-script@v5
+        with:
+          script: |
+            const response = await github.rest.repos.listReleases({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+            });
+            const existing_release = response.data.find(release => release.tag_name === "${{ env.REMOTE_LATEST_VERSION }}");
+            if (existing_release) {
+              console.log("Existing release found:", existing_release.tag_name);
+              return false;
+            } else {
+              console.log("No existing release found");
+              return true;
+            }
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          git fetch --tags
-          existing_release=$(git tag -l "${{ env.REMOTE_LATEST_VERSION }}")
-          if [ -z "$existing_release" ]; then
-            echo "NEED_BUILD=true" >> $GITHUB_ENV
-            echo "NEED_BUILD=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "NEED_BUILD=false" >> $GITHUB_ENV
-            echo "NEED_BUILD=false" >> "$GITHUB_OUTPUT"
-          fi
 
       - name: Set up Git
-        if: ${{ env.NEED_BUILD }} == 'true'
+        if: ${{ env.NEED_BUILD }} == 'true' && ${{ steps.check-release-existing.outputs.result }} == 'true'
         run: |
           git config --local user.email "${{ secrets.GITCONFIG_EMAIL }}"
           git config --local user.name "${{ secrets.GITCONFIG_NAME }}"
@@ -57,7 +62,7 @@ jobs:
 
       - name: Bump version and push tag
         id: tag_version
-        if: ${{ env.NEED_BUILD }} == 'true'
+        if: ${{ env.NEED_BUILD }} == 'true' && ${{ steps.check-release-existing.outputs.result }} == 'true'
         uses: mathieudutour/github-tag-action@v6.1
         with:
           tag_prefix: ""
@@ -65,7 +70,7 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Create a GitHub release
-        if: ${{ env.NEED_BUILD }} == 'true'
+        if: ${{ env.NEED_BUILD }} == 'true' && ${{ steps.check-release-existing.outputs.result }} == 'true'
         uses: ncipollo/release-action@v1
         with:
           tag: ${{ steps.tag_version.outputs.new_tag }}
