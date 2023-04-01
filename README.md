@@ -25,6 +25,11 @@ chmod +x build.sh && ./build.sh
 
 ## 3.1. 在`libhv_linux_x64_arm64`支持`arm64`和`x86_x64`
 ## 3.2. 在`libhv_apple_universal`合并了`MacOS`、`iOS`、`watchOS`、`tvOS`同时支持真机和模拟器，
+* `iOS`支持`11.0+`
+* `MacOS`支持`10.12+`
+* `watchOS`支持`9.0.0+`
+* `iOS`支持`9.0+`
+
 ## 3.3. 在`libhv_windows_x64_arm64`支持`arm64`和`x86_x64`
 ## 3.4. 在`libhv_android_v7a_v8a_x64`支持`arme-v7a`、`arm64-v8a`、`x86`、`x86_x64`
 

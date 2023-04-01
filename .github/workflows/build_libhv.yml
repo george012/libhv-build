@@ -217,7 +217,7 @@ jobs:
             cd ..
           }
           build OS64COMBINED "arm64;x86_64" 9.0
-          build TVOSCOMBINED "arm64;x86_64" 9.0
+          build TVOSCOMBINED "arm64;x86_64" 11.0
           build WATCHOSCOMBINED "arm64;x86_64" 9.0
           build MAC_UNIVERSAL "arm64;x86_64" 10.12
 
@@ -288,7 +288,6 @@ jobs:
             -DCMAKE_BUILD_TYPE=Release \
             -DANDROID_ABI=armeabi-v7a ..
           cmake --build .
-          tree
           cp ./lib/libhv.so ../build_libs/libhv-armeabi-v7a.so
 
       - name: Build dynamic library for Android-armv8a-arm64
