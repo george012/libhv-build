@@ -387,6 +387,7 @@ jobs:
           mkdir -p build-android-armv7a && cd build-android-armv7a
           cmake .. -DCMAKE_TOOLCHAIN_FILE=$ANDROID_NDK_HOME/build/cmake/android.toolchain.cmake -DCMAKE_BUILD_TYPE=Release -DANDROID_ABI=armeabi-v7a -DANDROID_NATIVE_API_LEVEL=21 -DANDROID_STL=c++_shared -DCMAKE_LIBRARY_OUTPUT_NAME=libhv-armeabi-v7a
           make
+          tree
           cp ./lib/libhv-armeabi-v7a.so ../build_libs
 
       - name: Build dynamic library for Android-armv8a-arm64
