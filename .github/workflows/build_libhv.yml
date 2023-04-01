@@ -115,8 +115,7 @@ jobs:
       - name: install dependencies
         run: |
            sudo apt update
-           sudo apt install -y build-essential cmake git
-           sudo apt install libssl-dev libnghttp2-dev
+           sudo apt install -y build-essential cmake git jq libssl-dev libnghttp2-dev
            mkdir -p ./libhv/build_libs
 
       - name: build x86_64
@@ -147,25 +146,15 @@ jobs:
         uses: actions/github-script@v6
         with:
           script: |
-            const core = require("@actions/core");
-            const response = await github.rest.repos.getReleaseByTag({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              tag: "${{ env.REMOTE_LATEST_VERSION }}"
-            });
-            const existing_asset = response.data.assets.find(asset => asset.name === "${{ env.over_file_name }}");
-            if (existing_asset) {
-              console.log("Existing asset found:", existing_asset.name);
-              core.setOutput("result", "false");
-            } else {
-              console.log("No existing asset found");
-              core.setOutput("result", "true");
-            }
+            wget --no-check-certificate https://raw.githubusercontent.com/george012/gt_script/master/github_repo_version_scan.sh
+            chmod a+x ./github_repo_version_scan.sh
+            file_exist=$(./github_repo_version_scan.sh --check_file_exist_from_repo_latest github.com/george012/libhv-build ${{ env.over_file_name }})
+            echo "file_exist=$file_exist" >> $GITHUB_ENV
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Upload dynamic library as release asset
-        if: ${{ steps.check_asset_existing.outputs.result }} == 'true'
+        if: ${{ env.file_exist }} == 'true'
         uses: actions/upload-release-asset@v1
         with:
           upload_url: ${{ needs.create-release.outputs.upload_url }}
@@ -229,24 +218,15 @@ jobs:
         uses: actions/github-script@v6
         with:
           script: |
-            const response = await github.rest.repos.getReleaseByTag({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              tag: "${{ env.REMOTE_LATEST_VERSION }}"
-            });
-            const existing_asset = response.data.assets.find(asset => asset.name === "${{ env.over_file_name }}");
-            if (existing_asset) {
-              console.log("Existing asset found:", existing_asset.name);
-              return false;
-            } else {
-              console.log("No existing asset found");
-              return true;
-            }
+            wget --no-check-certificate https://raw.githubusercontent.com/george012/gt_script/master/github_repo_version_scan.sh
+            chmod a+x ./github_repo_version_scan.sh
+            file_exist=$(./github_repo_version_scan.sh --check_file_exist_from_repo_latest github.com/george012/libhv-build ${{ env.over_file_name }})
+            echo "file_exist=$file_exist" >> $GITHUB_ENV
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Upload dynamic library as release asset
-        if: ${{ steps.check_asset_existing.outputs.result }} == 'true'
+        if: ${{ env.file_exist }} == 'true'
         uses: actions/upload-release-asset@v1
         with:
           upload_url: ${{ needs.create-release.outputs.upload_url }}
@@ -314,24 +294,15 @@ jobs:
         uses: actions/github-script@v6
         with:
           script: |
-            const response = await github.rest.repos.getReleaseByTag({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              tag: "${{ env.REMOTE_LATEST_VERSION }}"
-            });
-            const existing_asset = response.data.assets.find(asset => asset.name === "${{ env.over_file_name }}");
-            if (existing_asset) {
-              console.log("Existing asset found:", existing_asset.name);
-              return false;
-            } else {
-              console.log("No existing asset found");
-              return true;
-            }
+            wget --no-check-certificate https://raw.githubusercontent.com/george012/gt_script/master/github_repo_version_scan.sh
+            chmod a+x ./github_repo_version_scan.sh
+            file_exist=$(./github_repo_version_scan.sh --check_file_exist_from_repo_latest github.com/george012/libhv-build ${{ env.over_file_name }})
+            echo "file_exist=$file_exist" >> $GITHUB_ENV
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Upload dynamic library as release asset
-        if: ${{ steps.check_asset_existing.outputs.result }} == 'true'
+        if: ${{ env.file_exist }} == 'true'
         uses: actions/upload-release-asset@v1
         with:
           upload_url: ${{ needs.create-release.outputs.upload_url }}
@@ -362,8 +333,7 @@ jobs:
       - name: install dependencies
         run: |
           sudo apt update
-          sudo apt install -y build-essential cmake git
-          sudo apt install -y wget zip unzip tar tree
+          sudo apt install -y build-essential cmake git jq wget zip unzip tar tree
 
       - name: Set up JDK 1.8
         uses: actions/setup-java@v1
@@ -435,24 +405,15 @@ jobs:
         uses: actions/github-script@v6
         with:
           script: |
-            const response = await github.rest.repos.getReleaseByTag({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              tag: "${{ env.REMOTE_LATEST_VERSION }}"
-            });
-            const existing_asset = response.data.assets.find(asset => asset.name === "${{ env.over_file_name }}");
-            if (existing_asset) {
-              console.log("Existing asset found:", existing_asset.name);
-              return false;
-            } else {
-              console.log("No existing asset found");
-              return true;
-            }
+            wget --no-check-certificate https://raw.githubusercontent.com/george012/gt_script/master/github_repo_version_scan.sh
+            chmod a+x ./github_repo_version_scan.sh
+            file_exist=$(./github_repo_version_scan.sh --check_file_exist_from_repo_latest github.com/george012/libhv-build ${{ env.over_file_name }})
+            echo "file_exist=$file_exist" >> $GITHUB_ENV
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Upload dynamic library as release asset
-        if: ${{ steps.check_asset_existing.outputs.result }} == 'true'
+        if: ${{ env.file_exist }} == 'true'
         uses: actions/upload-release-asset@v1
         with:
           upload_url: ${{ needs.create-release.outputs.upload_url }}
