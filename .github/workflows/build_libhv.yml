@@ -79,7 +79,7 @@ jobs:
         if: ${{ env.NEED_BUILD }} == 'true'
         uses: ncipollo/release-action@v1
         with:
-          skipIfReleaseExists: true
+          skipIfReleaseExists: 'true'
           tag: ${{ steps.tag_version.outputs.new_tag }}
           name: ${{ steps.tag_version.outputs.new_tag }}
 
