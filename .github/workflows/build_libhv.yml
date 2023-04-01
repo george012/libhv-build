@@ -330,7 +330,7 @@ jobs:
           cmake \
             -DCMAKE_TOOLCHAIN_FILE=${{ steps.setup-ndk.outputs.ndk-path }}/build/cmake/android.toolchain.cmake \
             -DCMAKE_BUILD_TYPE=Release \
-            -DANDROID_ABI=armeabi-v7a ..
+            -DANDROID_ABI=arm64-v8a ..
           cmake --build .
           cp ./lib/libhv.so ./build_libs/libhv-arm64-v8a.so
 
@@ -342,7 +342,7 @@ jobs:
           cmake \
             -DCMAKE_TOOLCHAIN_FILE=${{ steps.setup-ndk.outputs.ndk-path }}/build/cmake/android.toolchain.cmake \
             -DCMAKE_BUILD_TYPE=Release \
-            -DANDROID_ABI=armeabi-v7a ..
+            -DANDROID_ABI=x86 ..
           cmake --build .
           cp ./lib/libhv.so ./build_libs/libhv-x86.so
 
@@ -354,7 +354,7 @@ jobs:
           cmake \
             -DCMAKE_TOOLCHAIN_FILE=${{ steps.setup-ndk.outputs.ndk-path }}/build/cmake/android.toolchain.cmake \
             -DCMAKE_BUILD_TYPE=Release \
-            -DANDROID_ABI=armeabi-v7a ..
+            -DANDROID_ABI=x86_64 ..
           cmake --build .
           cp ./lib/libhv.so ./build_libs/libhv-x86_x64.so
 
