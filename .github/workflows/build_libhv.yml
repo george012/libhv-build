@@ -139,10 +139,11 @@ jobs:
       contents: write
     steps:
       - name: Handle ENV PATH
+        shell: pwsh
         run: |
-          echo "NEED_BUILD=${{ needs.create-release.outputs.NEED_BUILD }}" >> $GITHUB_ENV
-          echo "REMOTE_LATEST_VERSION=${{ needs.create-release.outputs.REMOTE_LATEST_VERSION }}" >> $GITHUB_ENV
-          echo "upload_url=${{ needs.create-release.outputs.upload_url }}" >> $GITHUB_ENV
+          echo "NEED_BUILD=${{ needs.create-release.outputs.NEED_BUILD }}" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+          echo "NEED_BUILD=${{ needs.create-release.outputs.REMOTE_LATEST_VERSION }}" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+          echo "NEED_BUILD=${{ needs.create-release.outputs.upload_url }}" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
   
       - uses: actions/checkout@v3
         with:
@@ -177,16 +178,16 @@ jobs:
           cp ../cmake-build-arm64/bin/Debug/hv.dll libhv/arm64/
           cp ../include/hv/* ./libhv/include
           7z a libhv_windows_x64_arm64.zip ./libhv
-          echo "over_file_name=libhv_windows_x64_arm64.zip" >> $GITHUB_ENV
-
+          echo "over_file_name=libhv_windows_x64_arm64.zip" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+          
       - name: Check for existing asset
         id: check_asset_existing
         shell: powershell
         run: |
-          Invoke-WebRequest -Uri https://raw.githubusercontent.com/george012/gt_script/master/github_repo_version_scan.sh -OutFile github_repo_version_scan.sh
+          Invoke-WebRequest -Uri https://raw.githubusercontent.com/george012/gt_script/master/github_repo_version_scan.ps1 -OutFile github_repo_version_scan.ps1
           Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
-          $file_exist = & ./github_repo_version_scan.sh --check_file_exist_from_repo_latest github.com/$env:GITHUB_REPOSITORY $env:over_file_name
-          echo "file_exist=$file_exist" | Out-File -FilePath $env:GITHUB_ENV -Append
+          $file_exist = & (.\github_repo_version_scan.ps1) -Repo "github.com/$env:GITHUB_REPOSITORY" -FileName "$env:over_file_name"
+          echo "file_exist=$file_exist" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
