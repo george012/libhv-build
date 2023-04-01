@@ -218,14 +218,12 @@ jobs:
           }
           build MAC_UNIVERSAL "arm64;x86_64" 10.12
           build OS64COMBINED "arm64;x86_64" 9.0
-          build WATCHOSCOMBINED "arm64;x86_64" 9.0
-          build TVOSCOMBINED "arm64;x86_64" 11.0
 
       - name: merge dylibs and fix @rpath
         run: |
           cd libhv/build_libs
           mkdir -p ./libhv/include
-          lipo -create -output libhv.dylib ../build-OS64COMBINED/install/lib/libhv.dylib ../build-TVOSCOMBINED/install/lib/libhv.dylib ../build-WATCHOSCOMBINED/install/lib/libhv.dylib ../build-MAC_UNIVERSAL/install/lib/libhv.dylib
+          lipo -create -output libhv.dylib ../build-OS64COMBINED/install/lib/libhv.dylib ../build-MAC_UNIVERSAL/install/lib/libhv.dylib
           install_name_tool -id @rpath/libhv.dylib libhv.dylib
           install_name_tool -change /usr/local/opt/openssl@1.1/lib/libssl.1.1.dylib @rpath/libssl.1.1.dylib libhv.dylib
           install_name_tool -change /usr/local/opt/openssl@1.1/lib/libcrypto.1.1.dylib @rpath/libcrypto.1.1.dylib libhv.dylib
