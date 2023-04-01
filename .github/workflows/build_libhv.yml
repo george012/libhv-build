@@ -25,10 +25,8 @@ jobs:
           remote_latest_version=$(./github_repo_version_scan.sh --get_latest_version github.com/ithewei/libhv)
           echo "NEED_BUILD=$build_need" >> $GITHUB_ENV
           echo "REMOTE_LATEST_VERSION=$remote_latest_version" >> $GITHUB_ENV
-          if [ "${{ env.NEED_BUILD }}" != "true" ]; then
-            upload_url=$(./github_repo_version_scan.sh --get_latest_upload_url github.com/$GITHUB_REPOSITORY)
-            echo "upload_url=$remote_latest_version" >> $GITHUB_ENV
-          fi
+          upload_url=$(./github_repo_version_scan.sh --get_latest_upload_url github.com/$GITHUB_REPOSITORY)
+          echo "upload_url=$remote_latest_version" >> $GITHUB_ENV
         env:
           NEED_BUILD: $build_need
           REMOTE_LATEST_VERSION: $remote_latest_version
@@ -63,9 +61,6 @@ jobs:
         run: |
           if [ "${{ env.NEED_BUILD }}" == "true" ]; then
             echo "upload_url=${{ steps.step-create-release.outputs.upload_url }}" >> $GITHUB_ENV
-          else
-            upload_url=$(./github_repo_version_scan.sh --get_latest_upload_url github.com/$GITHUB_REPOSITORY)
-            echo "upload_url=$upload_url" >> $GITHUB_ENV
           fi
 
   build-linux:
