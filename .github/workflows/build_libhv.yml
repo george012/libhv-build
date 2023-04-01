@@ -31,19 +31,19 @@ jobs:
           NEED_BUILD: $build_need
           REMOTE_LATEST_VERSION: $remote_latest_version
 
-    - name: Check for existing release
-      if: ${{ env.NEED_BUILD == 'true' }}
-      id: check-release-existing
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      run: |
-        git fetch --tags
-        existing_release=$(git tag -l "${{ env.REMOTE_LATEST_VERSION }}")
-        if [ -z "$existing_release" ]; then
-          echo "NEED_BUILD=true" >> $GITHUB_ENV
-        else
-          echo "NEED_BUILD=false" >> $GITHUB_ENV
-        fi
+      - name: Check for existing release
+        if: ${{ env.NEED_BUILD }} == 'true'
+        id: check-release-existing
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          git fetch --tags
+          existing_release=$(git tag -l "${{ env.REMOTE_LATEST_VERSION }}")
+          if [ -z "$existing_release" ]; then
+            echo "NEED_BUILD=true" >> $GITHUB_ENV
+          else
+            echo "NEED_BUILD=false" >> $GITHUB_ENV
+          fi
 
       - name: Set up Git
         if: ${{ env.NEED_BUILD }} == 'true'
