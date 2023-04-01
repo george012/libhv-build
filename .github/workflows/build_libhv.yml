@@ -179,8 +179,8 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-  build-apple:
-    name: build-apple
+  build-osx:
+    name: build-osx
     needs: create-release
     if: ${{ needs.create-release.outputs.NEED_BUILD }} == "yes"
     runs-on: macos-latest
@@ -217,19 +217,13 @@ jobs:
             cd ..
           }
           build MAC_UNIVERSAL "arm64;x86_64" 10.12
-          build OS64COMBINED "arm64;x86_64" 9.0
 
       - name: merge dylibs and fix @rpath
         run: |
           cd libhv/build_libs
           mkdir -p ./libhv/include
-          lipo -create -output libhv.dylib ../build-OS64COMBINED/install/lib/libhv.dylib ../build-MAC_UNIVERSAL/install/lib/libhv.dylib
-          install_name_tool -id @rpath/libhv.dylib libhv.dylib
-          install_name_tool -change /usr/local/opt/openssl@1.1/lib/libssl.1.1.dylib @rpath/libssl.1.1.dylib libhv.dylib
-          install_name_tool -change /usr/local/opt/openssl@1.1/lib/libcrypto.1.1.dylib @rpath/libcrypto.1.1.dylib libhv.dylib
-          install_name_tool -change /usr/local/opt/nghttp2/lib/libnghttp2.14.dylib @rpath/libnghttp2.14.dylib libhv.dylib
-          cp ../include/hv/* ./libhv/include
-          mv libhv.dylib ./libhv/
+          cp ../build-MAC_UNIVERSAL/include/hv/* ./libhv/include
+          cp ./build-MAC_UNIVERSAL/lib/Release/libhv.dylib ./libhv/
           zip -q -r libhv_apple_universal.zip ./libhv
           echo "over_file_name=libhv_apple_universal.zip" >> $GITHUB_ENV
 
