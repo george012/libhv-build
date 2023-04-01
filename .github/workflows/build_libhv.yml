@@ -205,7 +205,6 @@ jobs:
     needs: create-release
     if: ${{ needs.create-release.outputs.NEED_BUILD }} == true
     runs-on: macos-latest
-    needs: create-release
     permissions:
       contents: write
     env:
