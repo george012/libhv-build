@@ -217,8 +217,8 @@ jobs:
           mkdir -p libhv/include
           mkdir -p libhv/x64
           mkdir -p libhv/arm64
-          cp ../cmake-build-win64/Release/hv.dll libhv/x64/
-          cp ../cmake-build-arm64/Release/hv.dll libhv/arm64/
+          cp ../cmake-build-win64/bin/Debug/hv.dll libhv/x64/
+          cp ../cmake-build-arm64/bin/Debug/hv.dll libhv/arm64/
           cp ../include/hv/* ./lbhv/include
           7z a libhv_windows_x64_arm64.zip ./libhv
           zip -q -r libhv_windows_x64_arm64.zip ./lbhv
@@ -304,7 +304,6 @@ jobs:
           install_name_tool -change /usr/local/opt/openssl@1.1/lib/libssl.1.1.dylib @rpath/libssl.1.1.dylib libhv.dylib
           install_name_tool -change /usr/local/opt/openssl@1.1/lib/libcrypto.1.1.dylib @rpath/libcrypto.1.1.dylib libhv.dylib
           install_name_tool -change /usr/local/opt/nghttp2/lib/libnghttp2.14.dylib @rpath/libnghttp2.14.dylib libhv.dylib
-          cd ../libhv
           cp ../include/hv/* ./lbhv/include
           mv ./libhv.dylib ./libhv/
           zip -q -r libhv_osx_x64_arm64.zip ./lbhv
@@ -381,30 +380,42 @@ jobs:
           export PATH=$PATH:$ANDROID_NDK_HOME
           mkdir -p libhv/build_libs
 
+      - name: install Android Cmake-Tool-Chain
+          sudo $ANDROID_NDK_HOME/build/tools/make-standalone-toolchain.sh --arch=arm --platform=android-21 --install-dir=/opt/ndk/arm
+          sudo $ANDROID_NDK_HOME/build/tools/make-standalone-toolchain.sh --arch=arm64 --platform=android-21 --install-dir=/opt/ndk/arm64
+          sudo $ANDROID_NDK_HOME/build/tools/make-standalone-toolchain.sh --arch=x86_64 --platform=android-21 --install-dir=/opt/ndk/x86_64
+
       - name: Build dynamic library for Android-armv7a
         run: |
           cd libhv
-          mkdir -p build-android-armv7a && cd build-android-armv7a
-          cmake .. -DCMAKE_TOOLCHAIN_FILE=$ANDROID_NDK_HOME/build/cmake/android.toolchain.cmake -DCMAKE_BUILD_TYPE=Release -DANDROID_ABI=armeabi-v7a -DANDROID_NATIVE_API_LEVEL=21 -DANDROID_STL=c++_shared -DCMAKE_LIBRARY_OUTPUT_NAME=libhv-armeabi-v7a
-          make
-          tree
-          cp ./lib/libhv-armeabi-v7a.so ../build_libs
+          export PATH=/opt/ndk/arm/bin:$PATH
+          export CROSS_COMPILE=arm-linux-androideabi-
+          ./configure
+          make clean
+          make libhv
+          cp ./lib/libhv.so ./build_libs/libhv-armeabi-v7a.so
 
       - name: Build dynamic library for Android-armv8a-arm64
         run: |
           cd libhv
-          mkdir -p build-android-armv8a-arm64 && cd build-android-armv8a-arm64
-          cmake .. -DCMAKE_TOOLCHAIN_FILE=$ANDROID_NDK_HOME/build/cmake/android.toolchain.cmake -DCMAKE_BUILD_TYPE=Release -DANDROID_ABI=arm64-v8a -DANDROID_NATIVE_API_LEVEL=21 -DANDROID_STL=c++_shared -DCMAKE_LIBRARY_OUTPUT_NAME=libhv-arm64-v8a
-          make
-          cp ./lib/libhv-arm64-v8a.so ../build_libs
+          export PATH=/opt/ndk/arm64/bin:$PATH
+          export CROSS_COMPILE=aarch64-linux-android-
+          ./configure
+          make clean
+          make libhv
+          # 在编译后，将产出文件移动到指定的目录
+          mkdir -p ./build_libs/
+          cp ./lib/libhv.so ./build_libs/libhv-arm64-v8a.so
 
       - name: Build dynamic library for Android-x86_64
         run: |
           cd libhv
-          mkdir -p build-android-x86_64 && cd build-android-x86_64
-          cmake .. -DCMAKE_TOOLCHAIN_FILE=$ANDROID_NDK_HOME/build/cmake/android.toolchain.cmake -DCMAKE_BUILD_TYPE=Release -DANDROID_ABI=x86_64 -DANDROID_NATIVE_API_LEVEL=21 -DANDROID_STL=c++_shared -DCMAKE_LIBRARY_OUTPUT_NAME=libhv-x86_x64
-          make
-          cp ./lib/libhv-x86_x64.so ../build_libs
+          export PATH=/opt/ndk/x86_64/bin:$PATH
+          export CROSS_COMPILE=x86_64-linux-android-
+          ./configure
+          make clean
+          make libhv
+          cp ./lib/libhv.so ./build_libs/libhv-x86_x64.so
 
       - name: Zip the .so files
         run: |
