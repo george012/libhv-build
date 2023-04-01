@@ -40,9 +40,9 @@ jobs:
         git fetch --tags
         existing_release=$(git tag -l "${{ env.REMOTE_LATEST_VERSION }}")
         if [ -z "$existing_release" ]; then
-          echo "NEED_BUILD=false" >> $GITHUB_ENV
-        else
           echo "NEED_BUILD=true" >> $GITHUB_ENV
+        else
+          echo "NEED_BUILD=false" >> $GITHUB_ENV
         fi
 
       - name: Set up Git
