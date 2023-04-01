@@ -219,9 +219,9 @@ jobs:
           mkdir -p libhv/arm64
           cp ../cmake-build-win64/bin/Debug/hv.dll libhv/x64/
           cp ../cmake-build-arm64/bin/Debug/hv.dll libhv/arm64/
-          cp ../include/hv/* ./lbhv/include
+          cp ../include/hv/* ./libhv/include
           7z a libhv_windows_x64_arm64.zip ./libhv
-          zip -q -r libhv_windows_x64_arm64.zip ./lbhv
+          zip -q -r libhv_windows_x64_arm64.zip ./libhv
           echo "over_file_name=libhv_windows_x64_arm64.zip" >> $GITHUB_ENV
 
       - name: Check for existing asset
@@ -305,7 +305,7 @@ jobs:
           install_name_tool -change /usr/local/opt/openssl@1.1/lib/libcrypto.1.1.dylib @rpath/libcrypto.1.1.dylib libhv.dylib
           install_name_tool -change /usr/local/opt/nghttp2/lib/libnghttp2.14.dylib @rpath/libnghttp2.14.dylib libhv.dylib
           cp ../include/hv/* ./lbhv/include
-          mv ./libhv.dylib ./libhv/
+          mv libhv.dylib ./libhv/
           zip -q -r libhv_osx_x64_arm64.zip ./lbhv
           echo "over_file_name=libhv_osx_x64_arm64.zip" >> $GITHUB_ENV
 
