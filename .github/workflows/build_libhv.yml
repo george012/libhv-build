@@ -114,10 +114,10 @@ jobs:
           submodules: 'recursive'
       - name: install dependencies
         run: |
-          sudo apt update
-          sudo apt install -y build-essential cmake git
-          sudo apt install libssl-dev libnghttp2-dev
-          mkdir -p ./libhv/build_libs
+           apt update
+           apt install -y build-essential cmake git
+           apt install libssl-dev libnghttp2-dev
+           mkdir -p ./libhv/build_libs
 
       - name: build x86_64
         run: |
@@ -361,9 +361,9 @@ jobs:
 
       - name: install dependencies
         run: |
-          sudo apt update
-          sudo apt install -y build-essential cmake git
-          sudo apt install -y wget zip unzip tar tree
+          apt update
+          apt install -y build-essential cmake git
+          apt install -y wget zip unzip tar tree
 
       - name: Set up JDK 1.8
         uses: actions/setup-java@v1
@@ -382,9 +382,9 @@ jobs:
 
       - name: install Android Cmake-Tool-Chain
         run: |
-          sudo $ANDROID_NDK_HOME/build/tools/make-standalone-toolchain.sh --arch=arm --platform=android-21 --install-dir=/opt/ndk/arm
-          sudo $ANDROID_NDK_HOME/build/tools/make-standalone-toolchain.sh --arch=arm64 --platform=android-21 --install-dir=/opt/ndk/arm64
-          sudo $ANDROID_NDK_HOME/build/tools/make-standalone-toolchain.sh --arch=x86_64 --platform=android-21 --install-dir=/opt/ndk/x86_64
+          $ANDROID_NDK_HOME/build/tools/make-standalone-toolchain.sh --arch=arm --platform=android-21 --install-dir=/opt/ndk/arm
+          $ANDROID_NDK_HOME/build/tools/make-standalone-toolchain.sh --arch=arm64 --platform=android-21 --install-dir=/opt/ndk/arm64
+          $ANDROID_NDK_HOME/build/tools/make-standalone-toolchain.sh --arch=x86_64 --platform=android-21 --install-dir=/opt/ndk/x86_64
 
       - name: Build dynamic library for Android-armv7a
         run: |
