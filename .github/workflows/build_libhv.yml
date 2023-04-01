@@ -144,9 +144,10 @@ jobs:
 
       - name: Check for existing asset
         id: check_asset_existing
-        uses: actions/github-script@v5
+        uses: actions/github-script@v6
         with:
           script: |
+            const core = require("@actions/core");
             const response = await github.rest.repos.getReleaseByTag({
               owner: context.repo.owner,
               repo: context.repo.repo,
@@ -155,10 +156,10 @@ jobs:
             const existing_asset = response.data.assets.find(asset => asset.name === "${{ env.over_file_name }}");
             if (existing_asset) {
               console.log("Existing asset found:", existing_asset.name);
-              return false;
+              core.setOutput("result", "false");
             } else {
               console.log("No existing asset found");
-              return true;
+              core.setOutput("result", "true");
             }
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -377,14 +378,14 @@ jobs:
           rm ndk.zip
           export ANDROID_NDK_HOME=$HOME/android-sdk/ndk
           export PATH=$PATH:$ANDROID_NDK_HOME
+          echo "ANDROID_NDK_HOME=$HOME/android-sdk/ndk" >> $GITHUB_ENV
           mkdir -p libhv/build_libs
 
       - name: install Android Cmake-Tool-Chain
         run: |
-          $ANDROID_NDK_HOME/build/tools/make-standalone-toolchain.sh --arch=arm --platform=android-21 --install-dir=/opt/ndk/arm
-          $ANDROID_NDK_HOME/build/tools/make-standalone-toolchain.sh --arch=arm64 --platform=android-21 --install-dir=/opt/ndk/arm64
-          $ANDROID_NDK_HOME/build/tools/make-standalone-toolchain.sh --arch=x86_64 --platform=android-21 --install-dir=/opt/ndk/x86_64
-
+          $ANDROID_NDK_HOME/build/tools/make-standalone-toolchain.py --arch=arm --platform=android-21 --install-dir=/opt/ndk/arm
+          $ANDROID_NDK_HOME/build/tools/make-standalone-toolchain.py --arch=arm64 --platform=android-21 --install-dir=/opt/ndk/arm64
+          $ANDROID_NDK_HOME/build/tools/make-standalone-toolchain.py --arch=x86_64 --platform=android-21 --install-dir=/opt/ndk/x86_64
       - name: Build dynamic library for Android-armv7a
         run: |
           cd libhv
