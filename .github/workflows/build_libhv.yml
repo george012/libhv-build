@@ -237,7 +237,7 @@ jobs:
             deployment_target=$3
             mkdir -p build-$platform && cd build-$platform
             cmake .. -G Xcode -DCMAKE_TOOLCHAIN_FILE=../cmake/ios.toolchain.cmake -DPLATFORM="$platform" -DDEPLOYMENT_TARGET="$deployment_target" -DARCHS="$archs" -DBUILD_SHARED_LIBS=ON -DCMAKE_INSTALL_PREFIX=./install -DCMAKE_BUILD_TYPE=Release
-            cmake --build . --target hv_shared --config Release
+            cmake --build . --config Release
             cd ..
           }
           build OS64COMBINED "arm64;x86_64" 9.0
