@@ -3,16 +3,9 @@ ProductName=libhv-build
 Build () 
 {   
     hv_version=`git submodule update --init --remote --quiet && cd libhv && git describe --tags $(git rev-list --tags --max-count=1) && cd ..` \
-    && echo Current-libhv-Version-With'['$hv_version']' \
-    && kas=`git rev-list --tags --max-count=1` \
-    && Current_VERSION_STRING=`git describe --tags $kas` \
-    && Current_VERSION_NUMBER=`echo ${Current_VERSION_STRING:1}` \
     && git add . \
-    && git commit -m "v$((${Current_VERSION_NUMBER}+1)) libhv_version=$hv_version" \
-    && git push \
-    && git tag v$((${Current_VERSION_NUMBER}+1)) \
-    && git push --tags \
-    && git tag -d v$((${Current_VERSION_NUMBER}-1))
+    && git commit -m "libhv_version=$hv_version" \
+    && git push
 }
 
 Check () 
