@@ -299,14 +299,14 @@ jobs:
         run: |
           cd libhv/build_libs
           mkdir -p ./lbhv/include
-          cd libhv
-          lipo -create -output libhv.dylib ../../build-x86_64/install/lib/libhv.dylib ../../build-arm64/install/lib/libhv.dylib
+          lipo -create -output libhv.dylib ../build-x86_64/install/lib/libhv.dylib ../build-arm64/install/lib/libhv.dylib
           install_name_tool -id @rpath/libhv.dylib libhv.dylib
           install_name_tool -change /usr/local/opt/openssl@1.1/lib/libssl.1.1.dylib @rpath/libssl.1.1.dylib libhv.dylib
           install_name_tool -change /usr/local/opt/openssl@1.1/lib/libcrypto.1.1.dylib @rpath/libcrypto.1.1.dylib libhv.dylib
           install_name_tool -change /usr/local/opt/nghttp2/lib/libnghttp2.14.dylib @rpath/libnghttp2.14.dylib libhv.dylib
-          cd ../
+          cd ../libhv
           cp ../include/hv/* ./lbhv/include
+          mv ./libhv.dylib ./libhv/
           zip -q -r libhv_osx_x64_arm64.zip ./lbhv
           echo "over_file_name=libhv_osx_x64_arm64.zip" >> $GITHUB_ENV
 
