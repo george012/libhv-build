@@ -103,15 +103,17 @@ jobs:
     permissions:
       contents: write
     steps:
+      - name: Handle ENV PATH
+        run: |
+          echo "NEED_BUILD=${{ needs.create-release.outputs.NEED_BUILD }}" >> $GITHUB_ENV
+          echo "REMOTE_LATEST_VERSION=${{ needs.create-release.outputs.REMOTE_LATEST_VERSION }}" >> $GITHUB_ENV
+          echo "upload_url=${{ needs.create-release.outputs.upload_url }}" >> $GITHUB_ENV
+
       - uses: actions/checkout@v3
         with:
           submodules: 'recursive'
-
       - name: install dependencies
         run: |
-          echo need_path==[NEED_BUILD]==${{ needs.create-release.outputs.NEED_BUILD }}
-          echo need_path==[REMOTE_LATEST_VERSION]==${{ needs.create-release.outputs.REMOTE_LATEST_VERSION }}
-          echo need_path==[upload_url]==${{ needs.create-release.outputs.upload_url }}
           sudo apt update
           sudo apt install -y build-essential cmake git
           sudo apt install libssl-dev libnghttp2-dev
@@ -138,17 +140,40 @@ jobs:
           ld -shared -o ./lbhv/libhv.so ../build-arm64/lib/libhv.so ../build-x86_64/lib/libhv.so
           cp ../include/hv/* ./lbhv/include
           zip -q -r libhv_linux_x64_arm64.zip ./lbhv
- 
-      - name: Upload dynamic library as release asset
-        uses: actions/upload-release-asset@v1
+          echo "over_file_name=libhv_linux_x64_arm64.zip" >> $GITHUB_ENV
+
+      - name: Check for existing asset
+        id: check_asset_existing
+        uses: actions/github-script@v5
         with:
-          upload_url: ${{ needs.create-release.outputs.upload_url }}
-          asset_path: ./libhv/build_libs/libhv_linux_x64_arm64.zip
-          asset_name: libhv_linux_x64_arm64.zip
-          asset_content_type: application/zip
+          script: |
+            const response = await github.rest.repos.getReleaseByTag({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              tag: "${{ env.REMOTE_LATEST_VERSION }}"
+            });
+            const existing_asset = response.data.assets.find(asset => asset.name === "${{ env.over_file_name }}");
+            if (existing_asset) {
+              console.log("Existing asset found:", existing_asset.name);
+              return false;
+            } else {
+              console.log("No existing asset found");
+              return true;
+            }
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Upload dynamic library as release asset
+        if: ${{ steps.check_asset_existing.outputs.result }} == 'true'
+        uses: actions/upload-release-asset@v1
+        with:
+          upload_url: ${{ needs.create-release.outputs.upload_url }}
+          asset_path: ./libhv/build_libs/${{ env.over_file_name }}
+          asset_name: ${{ env.over_file_name }}
+          asset_content_type: application/zip
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          
   build-windows:
     name: build-windows
     if: ${{ needs.create-release.outputs.NEED_BUILD }} == "true"
@@ -157,6 +182,12 @@ jobs:
     permissions:
       contents: write
     steps:
+      - name: Handle ENV PATH
+        run: |
+          echo "NEED_BUILD=${{ needs.create-release.outputs.NEED_BUILD }}" >> $GITHUB_ENV
+          echo "REMOTE_LATEST_VERSION=${{ needs.create-release.outputs.REMOTE_LATEST_VERSION }}" >> $GITHUB_ENV
+          echo "upload_url=${{ needs.create-release.outputs.upload_url }}" >> $GITHUB_ENV
+  
       - uses: actions/checkout@v3
         with:
           submodules: 'recursive'
@@ -191,13 +222,36 @@ jobs:
           cp ../include/hv/* ./lbhv/include
           7z a libhv_windows_x64_arm64.zip ./libhv
           zip -q -r libhv_windows_x64_arm64.zip ./lbhv
+          echo "over_file_name=libhv_windows_x64_arm64.zip" >> $GITHUB_ENV
+
+      - name: Check for existing asset
+        id: check_asset_existing
+        uses: actions/github-script@v5
+        with:
+          script: |
+            const response = await github.rest.repos.getReleaseByTag({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              tag: "${{ env.REMOTE_LATEST_VERSION }}"
+            });
+            const existing_asset = response.data.assets.find(asset => asset.name === "${{ env.over_file_name }}");
+            if (existing_asset) {
+              console.log("Existing asset found:", existing_asset.name);
+              return false;
+            } else {
+              console.log("No existing asset found");
+              return true;
+            }
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Upload dynamic library as release asset
+        if: ${{ steps.check_asset_existing.outputs.result }} == 'true'
         uses: actions/upload-release-asset@v1
         with:
           upload_url: ${{ needs.create-release.outputs.upload_url }}
-          asset_path: ./libhv/build_libs/libhv_windows_x64_arm64.zip
-          asset_name: libhv_windows_x64_arm64.zip
+          asset_path: ./libhv/build_libs/${{ env.over_file_name }}
+          asset_name: ${{ env.over_file_name }}
           asset_content_type: application/zip
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -212,6 +266,12 @@ jobs:
     env:
       HOMEBREW_NO_AUTO_UPDATE: true
     steps:
+      - name: Handle ENV PATH
+        run: |
+          echo "NEED_BUILD=${{ needs.create-release.outputs.NEED_BUILD }}" >> $GITHUB_ENV
+          echo "REMOTE_LATEST_VERSION=${{ needs.create-release.outputs.REMOTE_LATEST_VERSION }}" >> $GITHUB_ENV
+          echo "upload_url=${{ needs.create-release.outputs.upload_url }}" >> $GITHUB_ENV
+  
       - uses: actions/checkout@v3
         with:
           submodules: 'recursive'
@@ -248,13 +308,36 @@ jobs:
           cd ../
           cp ../include/hv/* ./lbhv/include
           zip -q -r libhv_osx_x64_arm64.zip ./lbhv
+          echo "over_file_name=libhv_osx_x64_arm64.zip" >> $GITHUB_ENV
+
+      - name: Check for existing asset
+        id: check_asset_existing
+        uses: actions/github-script@v5
+        with:
+          script: |
+            const response = await github.rest.repos.getReleaseByTag({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              tag: "${{ env.REMOTE_LATEST_VERSION }}"
+            });
+            const existing_asset = response.data.assets.find(asset => asset.name === "${{ env.over_file_name }}");
+            if (existing_asset) {
+              console.log("Existing asset found:", existing_asset.name);
+              return false;
+            } else {
+              console.log("No existing asset found");
+              return true;
+            }
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Upload dynamic library as release asset
+        if: ${{ steps.check_asset_existing.outputs.result }} == 'true'
         uses: actions/upload-release-asset@v1
         with:
           upload_url: ${{ needs.create-release.outputs.upload_url }}
-          asset_path: ./libhv/build_libs/libhv_osx_x64_arm64.zip
-          asset_name: libhv_osx_x64_arm64.zip
+          asset_path: ./libhv/build_libs/${{ env.over_file_name }}
+          asset_name: ${{ env.over_file_name }}
           asset_content_type: application/zip
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -267,6 +350,12 @@ jobs:
     permissions:
       contents: write
     steps:
+      - name: Handle ENV PATH
+        run: |
+          echo "NEED_BUILD=${{ needs.create-release.outputs.NEED_BUILD }}" >> $GITHUB_ENV
+          echo "REMOTE_LATEST_VERSION=${{ needs.create-release.outputs.REMOTE_LATEST_VERSION }}" >> $GITHUB_ENV
+          echo "upload_url=${{ needs.create-release.outputs.upload_url }}" >> $GITHUB_ENV
+  
       - uses: actions/checkout@v3
         with:
           submodules: 'recursive'
@@ -319,14 +408,42 @@ jobs:
       - name: Zip the .so files
         run: |
           cd libhv/build_libs
-          zip libhv_android_all_archs.zip libhv-armeabi-v7a.so libhv-arm64-v8a.so libhv-x86_x64.so
+          mkdir -p libhv/include
+          mv libhv-armeabi-v7a.so ./libhv
+          mv libhv-arm64-v8a.so ./libhv
+          mv libhv-x86_x64.so ./libhv
+          cp ../include/hv/* ./lbhv/include
+          zip -q -r libhv_android_v7a_v8a_x64.zip ./lbhv
+          echo "over_file_name=libhv_android_v7a_v8a_x64.zip" >> $GITHUB_ENV
 
-      - name: Upload the .zip file as a release asset
+      - name: Check for existing asset
+        id: check_asset_existing
+        uses: actions/github-script@v5
+        with:
+          script: |
+            const response = await github.rest.repos.getReleaseByTag({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              tag: "${{ env.REMOTE_LATEST_VERSION }}"
+            });
+            const existing_asset = response.data.assets.find(asset => asset.name === "${{ env.over_file_name }}");
+            if (existing_asset) {
+              console.log("Existing asset found:", existing_asset.name);
+              return false;
+            } else {
+              console.log("No existing asset found");
+              return true;
+            }
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload dynamic library as release asset
+        if: ${{ steps.check_asset_existing.outputs.result }} == 'true'
         uses: actions/upload-release-asset@v1
         with:
           upload_url: ${{ needs.create-release.outputs.upload_url }}
-          asset_path: ./libhv/build_libs/libhv_android_all_archs.zip
-          asset_name: libhv_android_all_archs.zip
+          asset_path: ./libhv/build_libs/${{ env.over_file_name }}
+          asset_name: ${{ env.over_file_name }}
           asset_content_type: application/zip
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
