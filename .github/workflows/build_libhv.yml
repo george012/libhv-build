@@ -57,7 +57,7 @@ jobs:
           else
             echo "NEED_BUILD=false" >> $GITHUB_ENV
             upload_url=$(./github_repo_version_scan.sh --get_latest_upload_url github.com/$GITHUB_REPOSITORY)
-            echo "upload_url=$remote_latest_version" >> >>$GITHUB_OUTPUT
+            echo "upload_url=$remote_latest_version" >> $GITHUB_OUTPUT
           fi
 
       - name: Set up Git
