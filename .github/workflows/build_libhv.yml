@@ -59,13 +59,13 @@ jobs:
 
       - name: handle Upload Url
         run: |
-          if [ "${{ env.NEED_BUILD }}" == "true" ]; then
+          if [ "${{ env.NEED_BUILD }}" == true ]; then
             echo "upload_url=${{ steps.step-create-release.outputs.upload_url }}" >> $GITHUB_ENV
           fi
 
   build-linux:
     name: build-linux  
-    if: ${{ needs.create-release.outputs.NEED_BUILD }} == "true"
+    if: ${{ needs.create-release.outputs.NEED_BUILD }} == true
     needs: create-release
     runs-on: ubuntu-latest
     permissions:
@@ -120,7 +120,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Upload dynamic library as release asset
-        if: ${{ env.file_exist }} == 'true'
+        if: ${{ env.file_exist }} == true
         uses: actions/upload-release-asset@v1
         with:
           upload_url: ${{ needs.create-release.outputs.upload_url }}
@@ -132,7 +132,7 @@ jobs:
           
   build-windows:
     name: build-windows
-    if: ${{ needs.create-release.outputs.NEED_BUILD }} == "true"
+    if: ${{ needs.create-release.outputs.NEED_BUILD }} == true
     needs: create-release
     runs-on: windows-2022
     permissions:
@@ -190,7 +190,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Upload dynamic library as release asset
-        if: ${{ env.file_exist }} == 'true'
+        if: ${{ env.file_exist }} == true
         uses: actions/upload-release-asset@v1
         with:
           upload_url: ${{ needs.create-release.outputs.upload_url }}
@@ -202,7 +202,7 @@ jobs:
 
   build-apple:
     name: build-apple
-    if: ${{ needs.create-release.outputs.NEED_BUILD }} == "true"
+    if: ${{ needs.create-release.outputs.NEED_BUILD }} == true
     runs-on: macos-latest
     needs: create-release
     permissions:
@@ -264,7 +264,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Upload dynamic library as release asset
-        if: ${{ env.file_exist }} == 'true'
+        if: ${{ env.file_exist }} == true
         uses: actions/upload-release-asset@v1
         with:
           upload_url: ${{ needs.create-release.outputs.upload_url }}
@@ -276,7 +276,7 @@ jobs:
 
   build-android:
     name: build-android
-    if: ${{ needs.create-release.outputs.NEED_BUILD }} == "true"
+    if: ${{ needs.create-release.outputs.NEED_BUILD }} == true
     needs: create-release
     runs-on: ubuntu-latest
     permissions:
@@ -354,7 +354,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Upload dynamic library as release asset
-        if: ${{ env.file_exist }} == 'true'
+        if: ${{ env.file_exist }} == true
         uses: actions/upload-release-asset@v1
         with:
           upload_url: ${{ needs.create-release.outputs.upload_url }}
