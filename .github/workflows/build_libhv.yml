@@ -41,8 +41,10 @@ jobs:
           existing_release=$(git tag -l "${{ env.REMOTE_LATEST_VERSION }}")
           if [ -z "$existing_release" ]; then
             echo "NEED_BUILD=true" >> $GITHUB_ENV
+            echo "NEED_BUILD=true" >> "$GITHUB_OUTPUT"
           else
             echo "NEED_BUILD=false" >> $GITHUB_ENV
+            echo "NEED_BUILD=false" >> "$GITHUB_OUTPUT"
           fi
 
       - name: Set up Git
