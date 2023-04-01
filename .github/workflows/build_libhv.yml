@@ -381,6 +381,7 @@ jobs:
           mkdir -p libhv/build_libs
 
       - name: install Android Cmake-Tool-Chain
+        run: |
           sudo $ANDROID_NDK_HOME/build/tools/make-standalone-toolchain.sh --arch=arm --platform=android-21 --install-dir=/opt/ndk/arm
           sudo $ANDROID_NDK_HOME/build/tools/make-standalone-toolchain.sh --arch=arm64 --platform=android-21 --install-dir=/opt/ndk/arm64
           sudo $ANDROID_NDK_HOME/build/tools/make-standalone-toolchain.sh --arch=x86_64 --platform=android-21 --install-dir=/opt/ndk/x86_64
