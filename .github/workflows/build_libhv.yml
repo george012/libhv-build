@@ -118,12 +118,12 @@ jobs:
 
       - name: merge libs
         run: |
+          tree
           cd ./libhv/build_libs
           ld -shared -o libhv.so ../build-arm64/lib/libhv.so ../build-x86_64/lib/libhv.so
 
       - name: Upload dynamic library as release asset
         uses: actions/upload-release-asset@v1
-        if: ${{ github.ref_type == 'tag' }}
         with:
           upload_url: ${{ needs.create-release.outputs.upload_url }}
           asset_path: ./libhv/build_libs/libhv.so
@@ -173,7 +173,6 @@ jobs:
 
       - name: Upload dynamic library as release asset
         uses: actions/upload-release-asset@v1
-        if: ${{ github.ref_type == 'tag' }}
         with:
           upload_url: ${{ needs.create-release.outputs.upload_url }}
           asset_path: ./libhv/build_libs/hv.lib
@@ -217,16 +216,16 @@ jobs:
 
       - name: merge dylibs and fix @rpath
         run: |
+          tree
           cd libhv/build_libs
           lipo -create -output libhv.dylib ../build-x86_64/install/lib/libhv.dylib ../build-arm64/install/lib/libhv.dylib
           install_name_tool -id @rpath/libhv.dylib libhv.dylib
           install_name_tool -change /usr/local/opt/openssl@1.1/lib/libssl.1.1.dylib @rpath/libssl.1.1.dylib libhv.dylib
           install_name_tool -change /usr/local/opt/openssl@1.1/lib/libcrypto.1.1.dylib @rpath/libcrypto.1.1.dylib libhv.dylib
           install_name_tool -change /usr/local/opt/nghttp2/lib/libnghttp2.14.dylib @rpath/libnghttp2.14.dylib libhv.dylib
-
+          
       - name: Upload dynamic library as release asset
         uses: actions/upload-release-asset@v1
-        if: ${{ github.ref_type == 'tag' }}
         with:
           upload_url: ${{ needs.create-release.outputs.upload_url }}
           asset_path: ./libhv/build_libs/libhv.dylib
@@ -274,6 +273,7 @@ jobs:
           mkdir -p build-android-armv7a && cd build-android-armv7a
           cmake .. -DCMAKE_TOOLCHAIN_FILE=$ANDROID_NDK_HOME/build/cmake/android.toolchain.cmake -DCMAKE_BUILD_TYPE=Release -DANDROID_ABI=armeabi-v7a -DANDROID_NATIVE_API_LEVEL=21 -DANDROID_STL=c++_shared -DCMAKE_LIBRARY_OUTPUT_NAME=libhv-armeabi-v7a
           make
+          tree
           cp ./lib/libhv-armeabi-v7a.so ../build_libs
 
       - name: Build dynamic library for Android-armv8a-arm64
@@ -299,7 +299,6 @@ jobs:
 
       - name: Upload the .zip file as a release asset
         uses: actions/upload-release-asset@v1
-        if: ${{ github.ref_type == 'tag' }}
         with:
           upload_url: ${{ needs.create-release.outputs.upload_url }}
           asset_path: ./libhv/build_libs/libhv_android_all_archs.zip
