@@ -305,7 +305,7 @@ jobs:
           java-version: 1.8
 
       - name: Set up Android NDK
-        uses: nttld/setup-android-ndk@v1
+        uses: nttld/setup-ndk@v1
         id: setup-ndk
         with:
           ndk-version: r25c
