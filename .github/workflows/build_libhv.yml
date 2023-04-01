@@ -303,51 +303,58 @@ jobs:
         with:
           java-version: 1.8
 
-      - name: Install Android NDK
-        run: |
-          mkdir -p $HOME/android-sdk/ndk
-          wget -q https://dl.google.com/android/repository/android-ndk-r25c-linux.zip -O ndk.zip
-          unzip -q ndk.zip -d $HOME/android-sdk/ndk
-          tree
-          rm ndk.zip
-          export ANDROID_NDK_HOME=$HOME/android-sdk/ndk
-          export PATH=$PATH:$ANDROID_NDK_HOME
-          mkdir -p libhv/build_libs
+      - name: Set up Android NDK
+        uses: nttld/setup-android-ndk@v1
+        id: setup-ndk
+        with:
+          ndk-version: r25c
 
       - name: Build dynamic library for Android-armeabi-v7a
         run: |
           cd libhv
-          export CROSS_COMPILE=arm-linux-androideabi-
-          ./configure
-          make clean
-          make libhv
+          mkdir build-armeabi-v7a && cd build-armeabi-v7a
+          echo ${{ steps.setup-ndk.outputs.ndk-path }}
+          cmake \
+            -DCMAKE_TOOLCHAIN_FILE=${{ steps.setup-ndk.outputs.ndk-path }}/build/cmake/android.toolchain.cmake \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DANDROID_ABI=armeabi-v7a ..
+          cmake --build .
           cp ./lib/libhv.so ./build_libs/libhv-armeabi-v7a.so
 
       - name: Build dynamic library for Android-armv8a-arm64
         run: |
           cd libhv
-          export CROSS_COMPILE=aarch64-linux-android-
-          ./configure
-          make clean
-          make libhv
+          mkdir build-arm64-v8a && cd build-arm64-v8a
+          echo ${{ steps.setup-ndk.outputs.ndk-path }}
+          cmake \
+            -DCMAKE_TOOLCHAIN_FILE=${{ steps.setup-ndk.outputs.ndk-path }}/build/cmake/android.toolchain.cmake \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DANDROID_ABI=armeabi-v7a ..
+          cmake --build .
           cp ./lib/libhv.so ./build_libs/libhv-arm64-v8a.so
 
       - name: Build dynamic library for Android-x86
         run: |
           cd libhv
-          export CROSS_COMPILE=i686-linux-android-
-          ./configure
-          make clean
-          make libhv
+          mkdir build-x86 && cd build-x86
+          echo ${{ steps.setup-ndk.outputs.ndk-path }}
+          cmake \
+            -DCMAKE_TOOLCHAIN_FILE=${{ steps.setup-ndk.outputs.ndk-path }}/build/cmake/android.toolchain.cmake \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DANDROID_ABI=armeabi-v7a ..
+          cmake --build .
           cp ./lib/libhv.so ./build_libs/libhv-x86.so
 
       - name: Build dynamic library for Android-x86_64
         run: |
           cd libhv
-          export CROSS_COMPILE=x86_64-linux-android-
-          ./configure
-          make clean
-          make libhv
+          mkdir build-x86_64 && cd build-x86_64
+          echo ${{ steps.setup-ndk.outputs.ndk-path }}
+          cmake \
+            -DCMAKE_TOOLCHAIN_FILE=${{ steps.setup-ndk.outputs.ndk-path }}/build/cmake/android.toolchain.cmake \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DANDROID_ABI=armeabi-v7a ..
+          cmake --build .
           cp ./lib/libhv.so ./build_libs/libhv-x86_x64.so
 
       - name: Zip the .so files
