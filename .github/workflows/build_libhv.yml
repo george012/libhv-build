@@ -25,43 +25,16 @@ jobs:
           remote_latest_version=$(./github_repo_version_scan.sh --get_latest_version github.com/ithewei/libhv)
           echo "NEED_BUILD=$build_need" >> $GITHUB_ENV
           echo "REMOTE_LATEST_VERSION=$remote_latest_version" >> $GITHUB_ENV
+          if [ "${{ env.NEED_BUILD }}" != "true" ]; then
+            upload_url=$(./github_repo_version_scan.sh --get_latest_upload_url github.com/$GITHUB_REPOSITORY)
+            echo "upload_url=$remote_latest_version" >> $GITHUB_ENV
+          fi
         env:
           NEED_BUILD: $build_need
           REMOTE_LATEST_VERSION: $remote_latest_version
 
-      - name: Check for existing release
-        if: ${{ env.NEED_BUILD }} == "true"
-        id: check-release-existing
-        uses: actions/github-script@v6
-        with:
-          script: |
-            const response = await github.rest.repos.listReleases({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-            });
-            const existing_release = response.data.find(release => release.tag_name === "${{ env.REMOTE_LATEST_VERSION }}");
-            if (existing_release) {
-              console.log("Existing release found:", existing_release.tag_name);
-              return "false";
-            } else {
-              console.log("No existing release found");
-              return "true";
-            }
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Set NEED_BUILD
-        run: |
-          if [ "${{ steps.check-release-existing.outputs.result }}" == "true" ]; then
-            echo "NEED_BUILD=true" >> $GITHUB_ENV
-          else
-            echo "NEED_BUILD=false" >> $GITHUB_ENV
-            upload_url=$(./github_repo_version_scan.sh --get_latest_upload_url github.com/$GITHUB_REPOSITORY)
-            echo "upload_url=$remote_latest_version" >> $GITHUB_ENV
-          fi
-
       - name: Set up Git
-        if: ${{ env.NEED_BUILD }} == "true"
+        if: ${{ env.NEED_BUILD }} == true
         run: |
           git config --local user.email "${{ secrets.GITCONFIG_EMAIL }}"
           git config --local user.name "${{ secrets.GITCONFIG_NAME }}"
@@ -70,7 +43,7 @@ jobs:
 
       - name: Bump version and push tag
         id: tag-version
-        if: ${{ env.NEED_BUILD }} == "true"
+        if: ${{ env.NEED_BUILD }} == true
         uses: mathieudutour/github-tag-action@v6.1
         with:
           tag_prefix: ""
@@ -79,7 +52,7 @@ jobs:
 
       - name: Step GitHub release
         id: step-create-release
-        if: ${{ env.NEED_BUILD }} == "true"
+        if: ${{ env.NEED_BUILD }} == true
         uses: ncipollo/release-action@v1
         with:
           skipIfReleaseExists: 'true'
