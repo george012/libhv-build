@@ -143,12 +143,10 @@ jobs:
 
       - name: Check for existing asset
         id: check_asset_existing
-        uses: actions/github-script@v6
-        with:
-          script: |
+        run: |
             wget --no-check-certificate https://raw.githubusercontent.com/george012/gt_script/master/github_repo_version_scan.sh
             chmod a+x ./github_repo_version_scan.sh
-            file_exist=$(./github_repo_version_scan.sh --check_file_exist_from_repo_latest github.com/george012/libhv-build ${{ env.over_file_name }})
+            file_exist=$(./github_repo_version_scan.sh --check_file_exist_from_repo_latest github.com/$GITHUB_REPOSITORY ${{ env.over_file_name }})
             echo "file_exist=$file_exist" >> $GITHUB_ENV
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -215,12 +213,10 @@ jobs:
 
       - name: Check for existing asset
         id: check_asset_existing
-        uses: actions/github-script@v6
-        with:
-          script: |
+        run: |
             wget --no-check-certificate https://raw.githubusercontent.com/george012/gt_script/master/github_repo_version_scan.sh
             chmod a+x ./github_repo_version_scan.sh
-            file_exist=$(./github_repo_version_scan.sh --check_file_exist_from_repo_latest github.com/george012/libhv-build ${{ env.over_file_name }})
+            file_exist=$(./github_repo_version_scan.sh --check_file_exist_from_repo_latest github.com/$GITHUB_REPOSITORY ${{ env.over_file_name }})
             echo "file_exist=$file_exist" >> $GITHUB_ENV
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -291,12 +287,10 @@ jobs:
 
       - name: Check for existing asset
         id: check_asset_existing
-        uses: actions/github-script@v6
-        with:
-          script: |
+        run: |
             wget --no-check-certificate https://raw.githubusercontent.com/george012/gt_script/master/github_repo_version_scan.sh
             chmod a+x ./github_repo_version_scan.sh
-            file_exist=$(./github_repo_version_scan.sh --check_file_exist_from_repo_latest github.com/george012/libhv-build ${{ env.over_file_name }})
+            file_exist=$(./github_repo_version_scan.sh --check_file_exist_from_repo_latest github.com/$GITHUB_REPOSITORY ${{ env.over_file_name }})
             echo "file_exist=$file_exist" >> $GITHUB_ENV
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -349,42 +343,23 @@ jobs:
           rm ndk.zip
           export ANDROID_NDK_HOME=$HOME/android-sdk/ndk
           export PATH=$PATH:$ANDROID_NDK_HOME
-          echo "ANDROID_NDK_HOME=$HOME/android-sdk/ndk" >> $GITHUB_ENV
           mkdir -p libhv/build_libs
-
-      - name: install Android Cmake-Tool-Chain
-        run: |
-          $ANDROID_NDK_HOME/build/tools/make-standalone-toolchain.py --arch=arm --platform=android-21 --install-dir=/opt/ndk/arm
-          $ANDROID_NDK_HOME/build/tools/make-standalone-toolchain.py --arch=arm64 --platform=android-21 --install-dir=/opt/ndk/arm64
-          $ANDROID_NDK_HOME/build/tools/make-standalone-toolchain.py --arch=x86_64 --platform=android-21 --install-dir=/opt/ndk/x86_64
-      - name: Build dynamic library for Android-armv7a
-        run: |
-          cd libhv
-          export PATH=/opt/ndk/arm/bin:$PATH
-          export CROSS_COMPILE=arm-linux-androideabi-
-          ./configure
-          make clean
-          make libhv
-          cp ./lib/libhv.so ./build_libs/libhv-armeabi-v7a.so
 
       - name: Build dynamic library for Android-armv8a-arm64
         run: |
           cd libhv
-          export PATH=/opt/ndk/arm64/bin:$PATH
-          export CROSS_COMPILE=aarch64-linux-android-
-          ./configure
+          echo "android { abiFilters 'arm64-v8a' }" > app/build.gradle
+          cmake -DCMAKE_TOOLCHAIN_FILE=$ANDROID_NDK_HOME/build/cmake/android.toolchain.cmake -DANDROID_ABI="arm64-v8a" -DANDROID_PLATFORM=21 .
           make clean
           make libhv
-          # 在编译后，将产出文件移动到指定的目录
           mkdir -p ./build_libs/
           cp ./lib/libhv.so ./build_libs/libhv-arm64-v8a.so
 
       - name: Build dynamic library for Android-x86_64
         run: |
           cd libhv
-          export PATH=/opt/ndk/x86_64/bin:$PATH
-          export CROSS_COMPILE=x86_64-linux-android-
-          ./configure
+          echo "android { abiFilters 'x86_64' }" > app/build.gradle
+          cmake -DCMAKE_TOOLCHAIN_FILE=$ANDROID_NDK_HOME/build/cmake/android.toolchain.cmake -DANDROID_ABI="x86_64" -DANDROID_PLATFORM=21 .
           make clean
           make libhv
           cp ./lib/libhv.so ./build_libs/libhv-x86_x64.so
@@ -402,12 +377,10 @@ jobs:
 
       - name: Check for existing asset
         id: check_asset_existing
-        uses: actions/github-script@v6
-        with:
-          script: |
+        run: |
             wget --no-check-certificate https://raw.githubusercontent.com/george012/gt_script/master/github_repo_version_scan.sh
             chmod a+x ./github_repo_version_scan.sh
-            file_exist=$(./github_repo_version_scan.sh --check_file_exist_from_repo_latest github.com/george012/libhv-build ${{ env.over_file_name }})
+            file_exist=$(./github_repo_version_scan.sh --check_file_exist_from_repo_latest github.com/$GITHUB_REPOSITORY ${{ env.over_file_name }})
             echo "file_exist=$file_exist" >> $GITHUB_ENV
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
