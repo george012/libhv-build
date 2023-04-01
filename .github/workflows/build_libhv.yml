@@ -232,29 +232,32 @@ jobs:
         run: |
           cd libhv
           build() {
-            arch=$1
-            mkdir -p build-$arch && cd build-$arch
-            cmake .. -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=ON -DCMAKE_INSTALL_PREFIX=./install -DCMAKE_OSX_ARCHITECTURES="$arch"
-            make -j$(sysctl -n hw.physicalcpu) VERBOSE=1
-            make install
+            platform=$1
+            archs=$2
+            deployment_target=$3
+            mkdir -p build-$platform && cd build-$platform
+            cmake .. -G Xcode -DCMAKE_TOOLCHAIN_FILE=../cmake/ios.toolchain.cmake -DPLATFORM="$platform" -DDEPLOYMENT_TARGET="$deployment_target" -DARCHS="$archs" -DBUILD_SHARED_LIBS=ON -DCMAKE_INSTALL_PREFIX=./install -DCMAKE_BUILD_TYPE=Release
+            cmake --build . --target hv_shared --config Release
             cd ..
           }
-          build x86_64
-          build arm64
+          build OS64COMBINED "arm64;x86_64" 9.0
+          build TVOSCOMBINED "arm64;x86_64" 9.0
+          build WATCHOSCOMBINED "arm64;x86_64" 9.0
+          build MAC_UNIVERSAL "arm64;x86_64" 10.12
 
       - name: merge dylibs and fix @rpath
         run: |
           cd libhv/build_libs
           mkdir -p ./libhv/include
-          lipo -create -output libhv.dylib ../build-x86_64/install/lib/libhv.dylib ../build-arm64/install/lib/libhv.dylib
+          lipo -create -output libhv.dylib ../build-OS64COMBINED/install/lib/libhv.dylib ../build-TVOSCOMBINED/install/lib/libhv.dylib ../build-WATCHOSCOMBINED/install/lib/libhv.dylib ../build-MAC_UNIVERSAL/install/lib/libhv.dylib
           install_name_tool -id @rpath/libhv.dylib libhv.dylib
           install_name_tool -change /usr/local/opt/openssl@1.1/lib/libssl.1.1.dylib @rpath/libssl.1.1.dylib libhv.dylib
           install_name_tool -change /usr/local/opt/openssl@1.1/lib/libcrypto.1.1.dylib @rpath/libcrypto.1.1.dylib libhv.dylib
           install_name_tool -change /usr/local/opt/nghttp2/lib/libnghttp2.14.dylib @rpath/libnghttp2.14.dylib libhv.dylib
           cp ../include/hv/* ./libhv/include
           mv libhv.dylib ./libhv/
-          zip -q -r libhv_osx_x64_arm64.zip ./libhv
-          echo "over_file_name=libhv_osx_x64_arm64.zip" >> $GITHUB_ENV
+          zip -q -r libhv_apple_universal.zip ./libhv
+          echo "over_file_name=libhv_apple_universal.zip" >> $GITHUB_ENV
 
       - name: Check for existing asset
         id: check_asset_existing
@@ -285,20 +288,18 @@ jobs:
     permissions:
       contents: write
     steps:
-      - name: Handle ENV PATH
-        run: |
-          echo "NEED_BUILD=${{ needs.create-release.outputs.NEED_BUILD }}" >> $GITHUB_ENV
-          echo "REMOTE_LATEST_VERSION=${{ needs.create-release.outputs.REMOTE_LATEST_VERSION }}" >> $GITHUB_ENV
-          echo "upload_url=${{ needs.create-release.outputs.upload_url }}" >> $GITHUB_ENV
-  
       - uses: actions/checkout@v3
         with:
           submodules: 'recursive'
 
       - name: install dependencies
         run: |
+          echo "NEED_BUILD=${{ needs.create-release.outputs.NEED_BUILD }}" >> $GITHUB_ENV
+          echo "REMOTE_LATEST_VERSION=${{ needs.create-release.outputs.REMOTE_LATEST_VERSION }}" >> $GITHUB_ENV
+          echo "upload_url=${{ needs.create-release.outputs.upload_url }}" >> $GITHUB_ENV
           sudo apt update
           sudo apt install -y build-essential cmake git jq wget zip unzip tar tree
+          mkdir -p libhv/build_libs
 
       - name: Set up JDK 1.8
         uses: actions/setup-java@v1
@@ -322,7 +323,7 @@ jobs:
             -DANDROID_ABI=armeabi-v7a ..
           cmake --build .
           tree
-          cp ./build-armeabi-v7a/lib/libhv.so ./build_libs/libhv-armeabi-v7a.so
+          cp ./lib/libhv.so ./build_libs/libhv-armeabi-v7a.so
 
       - name: Build dynamic library for Android-armv8a-arm64
         run: |
@@ -334,7 +335,7 @@ jobs:
             -DCMAKE_BUILD_TYPE=Release \
             -DANDROID_ABI=arm64-v8a ..
           cmake --build .
-          cp ./build-arm64-v8a/lib/libhv.so ./build_libs/libhv-arm64-v8a.so
+          cp ./lib/libhv.so ./build_libs/libhv-arm64-v8a.so
 
       - name: Build dynamic library for Android-x86
         run: |
@@ -346,7 +347,7 @@ jobs:
             -DCMAKE_BUILD_TYPE=Release \
             -DANDROID_ABI=x86 ..
           cmake --build .
-          cp ./build-x86/lib/libhv.so ./build_libs/libhv-x86.so
+          cp ./lib/libhv.so ./build_libs/libhv-x86.so
 
       - name: Build dynamic library for Android-x86_64
         run: |
@@ -358,7 +359,7 @@ jobs:
             -DCMAKE_BUILD_TYPE=Release \
             -DANDROID_ABI=x86_64 ..
           cmake --build .
-          cp ./build-x86_64/lib/libhv.so ./build_libs/libhv-x86_x64.so
+          cp ./lib/libhv.so ./build_libs/libhv-x86_x64.so
 
       - name: Zip the .so files
         run: |
@@ -383,74 +384,6 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Upload dynamic library as release asset
-        if: ${{ env.file_exist }} != "yes"
-        uses: actions/upload-release-asset@v1
-        with:
-          upload_url: ${{ needs.create-release.outputs.upload_url }}
-          asset_path: ./libhv/build_libs/${{ env.over_file_name }}
-          asset_name: ${{ env.over_file_name }}
-          asset_content_type: application/zip
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-  build-ios:
-    name: build-ios
-    needs: create-release
-    if: ${{ needs.create-release.outputs.NEED_BUILD }} == "yes"
-    runs-on: macos-latest
-    permissions:
-      contents: write
-    env:
-      HOMEBREW_NO_AUTO_UPDATE: true
-    steps:
-      - name: Handle ENV PATH
-        run: |
-          echo "NEED_BUILD=${{ needs.create-release.outputs.NEED_BUILD }}" >> $GITHUB_ENV
-          echo "REMOTE_LATEST_VERSION=${{ needs.create-release.outputs.REMOTE_LATEST_VERSION }}" >> $GITHUB_ENV
-          echo "upload_url=${{ needs.create-release.outputs.upload_url }}" >> $GITHUB_ENV
-
-      - uses: actions/checkout@v3
-        with:
-          submodules: 'recursive'
-
-      - name: install dependencies
-        run: |
-          brew install openssl@1.1 nghttp2 cmake
-          mkdir -p libhv/build_libs
-
-      - name: build x86_64 and arm64
-        run: |
-          cd libhv
-          build() {
-            arch=$1
-            mkdir -p build-$arch && cd build-$arch
-            cmake .. -G Xcode -DCMAKE_TOOLCHAIN_FILE=../cmake/ios.toolchain.cmake -DPLATFORM=iOS -DDEPLOYMENT_TARGET=9.0 -DARCHS="$arch" -DBUILD_SHARED_LIBS=ON
-            cmake --build . --target hv_shared --config Release
-            cd ..
-          }
-          build x86_64
-          build arm64
-
-      - name: create framework
-        run: |
-          cd libhv/build_libs
-          mkdir -p libhv.framework/Headers
-          lipo -create -output libhv.framework/libhv ../build-x86_64/install/lib/libhv.dylib ../build-arm64/install/lib/libhv.dylib
-          cp ../include/hv/* libhv.framework/Headers
-          zip -q -r libhv_ios_framework.zip libhv.framework
-          echo "over_file_name=libhv_ios_framework.zip" >> $GITHUB_ENV
-
-      - name: Check for existing asset
-        id: check_asset_existing
-        run: |
-          wget --no-check-certificate https://raw.githubusercontent.com/george012/gt_script/master/github_repo_version_scan.sh
-          chmod a+x ./github_repo_version_scan.sh
-          file_exist=$(./github_repo_version_scan.sh --check_file_exist_from_repo_latest github.com/$GITHUB_REPOSITORY ${{ env.over_file_name }})
-          echo "file_exist=$file_exist" >> $GITHUB_ENV
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Upload framework as release asset
         if: ${{ env.file_exist }} != "yes"
         uses: actions/upload-release-asset@v1
         with:
