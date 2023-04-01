@@ -153,7 +153,7 @@ jobs:
     name: build-windows
     if: ${{ needs.create-release.outputs.NEED_BUILD }} == "true"
     needs: create-release
-    runs-on: windows-latest
+    runs-on: windows-2022
     permissions:
       contents: write
     steps:
@@ -163,7 +163,7 @@ jobs:
 
       - name: install dependencies
         run: |
-          choco install -y openssl.light tree
+          choco install -y openssl.light tree cmake
           mkdir -p libhv/build_libs
 
       - name: build x86_64
@@ -181,20 +181,24 @@ jobs:
           cmake --build .
 
       - name: merge DLLs
-        shell: cmd
         run: |
-          tree -N
           cd libhv/build_libs
-          call "%VS_2022_PATH%\VC\Auxiliary\Build\vcvarsall.bat" x64
-          lib /OUT:hv.lib ..\cmake-build-win64\Debug\hv.lib ..\cmake-build-arm64\Debug\hv.lib
+          mkdir -p libhv/include
+          mkdir -p libhv/x64
+          mkdir -p libhv/arm64
+          cp ../cmake-build-win64/Release/hv.dll libhv/x64/
+          cp ../cmake-build-arm64/Release/hv.dll libhv/arm64/
+          cp ../include/hv/* ./lbhv/include
+          7z a libhv_windows_x64_arm64.zip ./libhv
+          zip -q -r libhv_windows_x64_arm64.zip ./lbhv
 
       - name: Upload dynamic library as release asset
         uses: actions/upload-release-asset@v1
         with:
           upload_url: ${{ needs.create-release.outputs.upload_url }}
-          asset_path: ./libhv/build_libs/hv.lib
-          asset_name: hv_windows_x64_arm64.lib
-          asset_content_type: application/x-archive
+          asset_path: ./libhv/build_libs/libhv_windows_x64_arm64.zip
+          asset_name: libhv_windows_x64_arm64.zip
+          asset_content_type: application/zip
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -235,11 +239,13 @@ jobs:
         run: |
           cd libhv/build_libs
           mkdir -p ./lbhv/include
-          lipo -create -output ./libhv/libhv.dylib ../build-x86_64/install/lib/libhv.dylib ../build-arm64/install/lib/libhv.dylib
+          cd libhv
+          lipo -create -output libhv.dylib ../../build-x86_64/install/lib/libhv.dylib ../../build-arm64/install/lib/libhv.dylib
           install_name_tool -id @rpath/libhv.dylib libhv.dylib
           install_name_tool -change /usr/local/opt/openssl@1.1/lib/libssl.1.1.dylib @rpath/libssl.1.1.dylib libhv.dylib
           install_name_tool -change /usr/local/opt/openssl@1.1/lib/libcrypto.1.1.dylib @rpath/libcrypto.1.1.dylib libhv.dylib
           install_name_tool -change /usr/local/opt/nghttp2/lib/libnghttp2.14.dylib @rpath/libnghttp2.14.dylib libhv.dylib
+          cd ../
           cp ../include/hv/* ./lbhv/include
           zip -q -r libhv_osx_x64_arm64.zip ./lbhv
 
