@@ -136,10 +136,10 @@ jobs:
       - name: merge libs
         run: |
           cd ./libhv/build_libs
-          mkdir -p ./lbhv/include
-          ld -shared -o ./lbhv/libhv.so ../build-arm64/lib/libhv.so ../build-x86_64/lib/libhv.so
-          cp ../include/hv/* ./lbhv/include
-          zip -q -r libhv_linux_x64_arm64.zip ./lbhv
+          mkdir -p ./libhv/include
+          ld -shared -o ./libhv/libhv.so ../build-arm64/lib/libhv.so ../build-x86_64/lib/libhv.so
+          cp ../include/hv/* ./libhv/include
+          zip -q -r libhv_linux_x64_arm64.zip ./libhv
           echo "over_file_name=libhv_linux_x64_arm64.zip" >> $GITHUB_ENV
 
       - name: Check for existing asset
@@ -298,15 +298,15 @@ jobs:
       - name: merge dylibs and fix @rpath
         run: |
           cd libhv/build_libs
-          mkdir -p ./lbhv/include
+          mkdir -p ./libhv/include
           lipo -create -output libhv.dylib ../build-x86_64/install/lib/libhv.dylib ../build-arm64/install/lib/libhv.dylib
           install_name_tool -id @rpath/libhv.dylib libhv.dylib
           install_name_tool -change /usr/local/opt/openssl@1.1/lib/libssl.1.1.dylib @rpath/libssl.1.1.dylib libhv.dylib
           install_name_tool -change /usr/local/opt/openssl@1.1/lib/libcrypto.1.1.dylib @rpath/libcrypto.1.1.dylib libhv.dylib
           install_name_tool -change /usr/local/opt/nghttp2/lib/libnghttp2.14.dylib @rpath/libnghttp2.14.dylib libhv.dylib
-          cp ../include/hv/* ./lbhv/include
+          cp ../include/hv/* ./libhv/include
           mv libhv.dylib ./libhv/
-          zip -q -r libhv_osx_x64_arm64.zip ./lbhv
+          zip -q -r libhv_osx_x64_arm64.zip ./libhv
           echo "over_file_name=libhv_osx_x64_arm64.zip" >> $GITHUB_ENV
 
       - name: Check for existing asset
@@ -425,8 +425,8 @@ jobs:
           mv libhv-armeabi-v7a.so ./libhv
           mv libhv-arm64-v8a.so ./libhv
           mv libhv-x86_x64.so ./libhv
-          cp ../include/hv/* ./lbhv/include
-          zip -q -r libhv_android_v7a_v8a_x64.zip ./lbhv
+          cp ../include/hv/* ./libhv/include
+          zip -q -r libhv_android_v7a_v8a_x64.zip ./libhv
           echo "over_file_name=libhv_android_v7a_v8a_x64.zip" >> $GITHUB_ENV
 
       - name: Check for existing asset
