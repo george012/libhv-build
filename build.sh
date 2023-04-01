@@ -1,15 +1,13 @@
 #!/bin/bash
 ProductName=libhv-build
-Build () 
-{   git submodule update --init --recursive \
-    && hv_version=`git submodule update --init --remote --quiet && cd libhv && git describe --tags $(git rev-list --tags --max-count=1) && cd ..` \
+Build () {   
+    hv_version=`git submodule update --init --remote --quiet && cd libhv && git describe --tags $(git rev-list --tags --max-count=1) && cd ..` \
     && git add . \
     && git commit -m "libhv_version=$hv_version" \
     && git push
 }
 
-Check () 
-{
+Check () {
     echo "ENV PASS"
 }
 
