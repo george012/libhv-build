@@ -10,8 +10,8 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       upload_url: ${{ steps.step-create-release.outputs.upload_url }}
-      NEED_BUILD: ${{ steps.check-build-need.outputs.NEED_BUILD }}
-      REMOTE_LATEST_VERSION: ${{ steps.check-build-need.outputs.REMOTE_LATEST_VERSION }}
+      NEED_BUILD: ${{ env.NEED_BUILD }}
+      REMOTE_LATEST_VERSION: ${{ env.REMOTE_LATEST_VERSION }}
     steps:
       - name: Checkout Current Repository
         uses: actions/checkout@v3
@@ -25,8 +25,6 @@ jobs:
           remote_latest_version=$(./github_repo_version_scan.sh --get_latest_version github.com/ithewei/libhv)
           echo "NEED_BUILD=$build_need" >> $GITHUB_ENV
           echo "REMOTE_LATEST_VERSION=$remote_latest_version" >> $GITHUB_ENV
-          echo "NEED_BUILD=$build_need" >> "$GITHUB_OUTPUT"
-          echo "REMOTE_LATEST_VERSION=$remote_latest_version" >> "$GITHUB_OUTPUT"
         env:
           NEED_BUILD: $build_need
           REMOTE_LATEST_VERSION: $remote_latest_version
@@ -52,8 +50,16 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Set NEED_BUILD
+        run: |
+          if [ "${{ steps.check-release-existing.outputs.result }}" == "true" ]; then
+            echo "NEED_BUILD=true" >> $GITHUB_ENV
+          else
+            echo "NEED_BUILD=false" >> $GITHUB_ENV
+          fi
+
       - name: Set up Git
-        if: ${{ env.NEED_BUILD }} == 'true' && ${{ steps.check-release-existing.outputs.result }} == 'true'
+        if: ${{ env.NEED_BUILD }} == 'true'
         run: |
           git config --local user.email "${{ secrets.GITCONFIG_EMAIL }}"
           git config --local user.name "${{ secrets.GITCONFIG_NAME }}"
@@ -62,15 +68,15 @@ jobs:
 
       - name: Bump version and push tag
         id: tag_version
-        if: ${{ env.NEED_BUILD }} == 'true' && ${{ steps.check-release-existing.outputs.result }} == 'true'
+        if: ${{ env.NEED_BUILD }} == 'true'
         uses: mathieudutour/github-tag-action@v6.1
         with:
           tag_prefix: ""
-          custom_tag: ${{ steps.check-build-need.outputs.REMOTE_LATEST_VERSION }}
+          custom_tag: ${{ env.REMOTE_LATEST_VERSION }}
           github_token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Create a GitHub release
-        if: ${{ env.NEED_BUILD }} == 'true' && ${{ steps.check-release-existing.outputs.result }} == 'true'
+        if: ${{ env.NEED_BUILD }} == 'true'
         uses: ncipollo/release-action@v1
         with:
           tag: ${{ steps.tag_version.outputs.new_tag }}
