@@ -56,6 +56,8 @@ jobs:
             echo "NEED_BUILD=true" >> $GITHUB_ENV
           else
             echo "NEED_BUILD=false" >> $GITHUB_ENV
+            upload_url=$(./github_repo_version_scan.sh --get_latest_upload_url github.com/$GITHUB_REPOSITORY)
+            echo "upload_url=$remote_latest_version" >> $GITHUB_ENV
           fi
 
       - name: Set up Git
@@ -120,15 +122,18 @@ jobs:
         run: |
           tree
           cd ./libhv/build_libs
-          ld -shared -o libhv.so ../build-arm64/lib/libhv.so ../build-x86_64/lib/libhv.so
-
+          ld -shared -o ./lbhv/libhv.so ../build-arm64/lib/libhv.so ../build-x86_64/lib/libhv.so
+          mkdir -p ./lbhv/include
+          cp ../include/hv/* ./lbhv/include
+          zip -q -r libhv_linux_x64_arm64.zip ./lbhv
+ 
       - name: Upload dynamic library as release asset
         uses: actions/upload-release-asset@v1
         with:
           upload_url: ${{ needs.create-release.outputs.upload_url }}
-          asset_path: ./libhv/build_libs/libhv.so
-          asset_name: libhv_linux_x64_arm64.so
-          asset_content_type: application/x-sharedlib
+          asset_path: ./libhv/build_libs/libhv_linux_x64_arm64.zip
+          asset_name: libhv_linux_x64_arm64.zip
+          asset_content_type: application/zip
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
