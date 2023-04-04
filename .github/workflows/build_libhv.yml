@@ -66,7 +66,7 @@ jobs:
   build-linux:
     name: build-linux  
     needs: create-release
-    if: ${{ needs.create-release.outputs.NEED_BUILD }} == "yes"
+    if: ${{ needs.create-release.outputs.NEED_BUILD }} == 'yes'
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -122,7 +122,7 @@ jobs:
   build-windows:
     name: build-windows
     needs: create-release
-    if: ${{ needs.create-release.outputs.NEED_BUILD }} == "yes"
+    if: ${{ needs.create-release.outputs.NEED_BUILD }} == 'yes'
     runs-on: windows-2022
     permissions:
       contents: write
@@ -182,7 +182,7 @@ jobs:
   build-osx:
     name: build-osx
     needs: create-release
-    if: ${{ needs.create-release.outputs.NEED_BUILD }} == "yes"
+    if: ${{ needs.create-release.outputs.NEED_BUILD }} == 'yes'
     runs-on: macos-latest
     permissions:
       contents: write
@@ -240,7 +240,7 @@ jobs:
   build-android:
     name: build-android
     needs: create-release
-    if: ${{ needs.create-release.outputs.NEED_BUILD }} == "yes"
+    if: ${{ needs.create-release.outputs.NEED_BUILD }} == 'yes'
     runs-on: ubuntu-latest
     permissions:
       contents: write
