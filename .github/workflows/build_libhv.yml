@@ -3,7 +3,7 @@ name: Cross-platform Build libhv
 on:
   workflow_dispatch:
   schedule:
-    - cron: '0 */4 * * *' # 每 4 小时检查一次
+    - cron: '0 */24 * * *' # 每 24 小时检查一次
 
 jobs:
   create-release:
