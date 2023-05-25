@@ -6,7 +6,7 @@ on:
     - cron: '0 */24 * * *' # 每 24 小时检查一次
 
 jobs:
-  create-release:
+  createRelease:
     runs-on: ubuntu-latest
     outputs:
       upload_url: ${{ env.upload_url }}
@@ -49,7 +49,7 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Step GitHub release
-        id: step-create-release
+        id: stepCreateRelease
         if: ${{ env.NEED_BUILD }} == "yes"
         uses: ncipollo/release-action@v1
         with:
@@ -60,26 +60,26 @@ jobs:
       - name: handle Upload Url
         run: |
           if [ "${{ env.NEED_BUILD }}" == "yes" ]; then
-            echo "upload_url=${{ steps.step-create-release.outputs.upload_url }}" >> $GITHUB_ENV
+            echo "upload_url=${{ steps.stepCreateRelease.outputs.upload_url }}" >> $GITHUB_ENV
           fi
 
-  build-linux:
-    name: build-linux  
-    needs: create-release
-    if: ${{ needs.create-release.outputs.NEED_BUILD }} == 'yes'
+  buildLinux:
+    name: buildLinux  
+    needs: createRelease
+    if: ${{ needs.createRelease.outputs.NEED_BUILD }} == 'yes'
     runs-on: ubuntu-latest
     permissions:
       contents: write
     steps:
       - name: Handle ENV PATH
         run: |
-          echo "NEED_BUILD=${{ needs.create-release.outputs.NEED_BUILD }}" >> $GITHUB_ENV
-          echo "REMOTE_LATEST_VERSION=${{ needs.create-release.outputs.REMOTE_LATEST_VERSION }}" >> $GITHUB_ENV
-          echo "upload_url=${{ needs.create-release.outputs.upload_url }}" >> $GITHUB_ENV
+          echo "NEED_BUILD=${{ needs.createRelease.outputs.NEED_BUILD }}" >> $GITHUB_ENV
+          echo "REMOTE_LATEST_VERSION=${{ needs.createRelease.outputs.REMOTE_LATEST_VERSION }}" >> $GITHUB_ENV
+          echo "upload_url=${{ needs.createRelease.outputs.upload_url }}" >> $GITHUB_ENV
 
       - uses: actions/checkout@v3
         with:
-          submodules: 'recursive'
+          submodules: 'true'
       - name: install dependencies
         run: |
            sudo apt update
@@ -112,17 +112,17 @@ jobs:
       - name: Upload dynamic library as release asset
         uses: actions/upload-release-asset@v1
         with:
-          upload_url: ${{ needs.create-release.outputs.upload_url }}
+          upload_url: ${{ needs.createRelease.outputs.upload_url }}
           asset_path: ./libhv/build_libs/${{ env.over_file_name }}
           asset_name: ${{ env.over_file_name }}
           asset_content_type: application/zip
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           
-  build-windows:
-    name: build-windows
-    needs: create-release
-    if: ${{ needs.create-release.outputs.NEED_BUILD }} == 'yes'
+  buildWindows:
+    name: buildWindows
+    needs: createRelease
+    if: ${{ needs.createRelease.outputs.NEED_BUILD }} == 'yes'
     runs-on: windows-2022
     permissions:
       contents: write
@@ -130,13 +130,13 @@ jobs:
       - name: Handle ENV PATH
         shell: pwsh
         run: |
-          echo "NEED_BUILD=${{ needs.create-release.outputs.NEED_BUILD }}" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
-          echo "NEED_BUILD=${{ needs.create-release.outputs.REMOTE_LATEST_VERSION }}" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
-          echo "NEED_BUILD=${{ needs.create-release.outputs.upload_url }}" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+          echo "NEED_BUILD=${{ needs.createRelease.outputs.NEED_BUILD }}" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+          echo "NEED_BUILD=${{ needs.createRelease.outputs.REMOTE_LATEST_VERSION }}" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+          echo "NEED_BUILD=${{ needs.createRelease.outputs.upload_url }}" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
   
       - uses: actions/checkout@v3
         with:
-          submodules: 'recursive'
+          submodules: 'true'
 
       - name: install dependencies
         run: |
@@ -172,17 +172,17 @@ jobs:
       - name: Upload dynamic library as release asset
         uses: actions/upload-release-asset@v1
         with:
-          upload_url: ${{ needs.create-release.outputs.upload_url }}
+          upload_url: ${{ needs.createRelease.outputs.upload_url }}
           asset_path: ./libhv/build_libs/${{ env.over_file_name }}
           asset_name: ${{ env.over_file_name }}
           asset_content_type: application/zip
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-  build-osx:
-    name: build-osx
-    needs: create-release
-    if: ${{ needs.create-release.outputs.NEED_BUILD }} == 'yes'
+  buildOSX:
+    name: buildOSX
+    needs: createRelease
+    if: ${{ needs.createRelease.outputs.NEED_BUILD }} == 'yes'
     runs-on: macos-latest
     permissions:
       contents: write
@@ -191,13 +191,13 @@ jobs:
     steps:
       - name: Handle ENV PATH
         run: |
-          echo "NEED_BUILD=${{ needs.create-release.outputs.NEED_BUILD }}" >> $GITHUB_ENV
-          echo "REMOTE_LATEST_VERSION=${{ needs.create-release.outputs.REMOTE_LATEST_VERSION }}" >> $GITHUB_ENV
-          echo "upload_url=${{ needs.create-release.outputs.upload_url }}" >> $GITHUB_ENV
+          echo "NEED_BUILD=${{ needs.createRelease.outputs.NEED_BUILD }}" >> $GITHUB_ENV
+          echo "REMOTE_LATEST_VERSION=${{ needs.createRelease.outputs.REMOTE_LATEST_VERSION }}" >> $GITHUB_ENV
+          echo "upload_url=${{ needs.createRelease.outputs.upload_url }}" >> $GITHUB_ENV
   
       - uses: actions/checkout@v3
         with:
-          submodules: 'recursive'
+          submodules: 'true'
 
       - name: install dependencies
         run: |
@@ -230,30 +230,30 @@ jobs:
       - name: Upload dynamic library as release asset
         uses: actions/upload-release-asset@v1
         with:
-          upload_url: ${{ needs.create-release.outputs.upload_url }}
+          upload_url: ${{ needs.createRelease.outputs.upload_url }}
           asset_path: ./libhv/build_libs/${{ env.over_file_name }}
           asset_name: ${{ env.over_file_name }}
           asset_content_type: application/zip
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-  build-android:
-    name: build-android
-    needs: create-release
-    if: ${{ needs.create-release.outputs.NEED_BUILD }} == 'yes'
+  buildAndroid:
+    name: buildAndroid
+    needs: createRelease
+    if: ${{ needs.createRelease.outputs.NEED_BUILD }} == 'yes'
     runs-on: ubuntu-latest
     permissions:
       contents: write
     steps:
       - uses: actions/checkout@v3
         with:
-          submodules: 'recursive'
+          submodules: 'true'
 
       - name: install dependencies
         run: |
-          echo "NEED_BUILD=${{ needs.create-release.outputs.NEED_BUILD }}" >> $GITHUB_ENV
-          echo "REMOTE_LATEST_VERSION=${{ needs.create-release.outputs.REMOTE_LATEST_VERSION }}" >> $GITHUB_ENV
-          echo "upload_url=${{ needs.create-release.outputs.upload_url }}" >> $GITHUB_ENV
+          echo "NEED_BUILD=${{ needs.createRelease.outputs.NEED_BUILD }}" >> $GITHUB_ENV
+          echo "REMOTE_LATEST_VERSION=${{ needs.createRelease.outputs.REMOTE_LATEST_VERSION }}" >> $GITHUB_ENV
+          echo "upload_url=${{ needs.createRelease.outputs.upload_url }}" >> $GITHUB_ENV
           sudo apt update
           sudo apt install -y build-essential cmake git jq wget zip unzip tar tree
           mkdir -p libhv/build_libs
@@ -336,7 +336,7 @@ jobs:
       - name: Upload dynamic library as release asset
         uses: actions/upload-release-asset@v1
         with:
-          upload_url: ${{ needs.create-release.outputs.upload_url }}
+          upload_url: ${{ needs.createRelease.outputs.upload_url }}
           asset_path: ./libhv/build_libs/${{ env.over_file_name }}
           asset_name: ${{ env.over_file_name }}
           asset_content_type: application/zip
