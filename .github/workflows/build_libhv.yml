@@ -162,13 +162,13 @@ jobs:
         run: |
           cd libhv/build_libs
           mkdir -p libhv/include
-          mkdir -p libhv/x64
+          mkdir -p libhv/x86_64
           mkdir -p libhv/arm64
-          cp ../cmake-build-win64/bin/Debug/hv.dll libhv/x64/
+          cp ../cmake-build-win64/bin/Debug/hv.dll libhv/x86_64/
           cp ../cmake-build-arm64/bin/Debug/hv.dll libhv/arm64/
           cp ../include/hv/* ./libhv/include
-          7z a libhv_windows_x64_arm64.zip ./libhv
-          echo "over_file_name=libhv_windows_x64_arm64.zip" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+          7z a libhv_windows_x86_64_arm64.zip ./libhv
+          echo "over_file_name=libhv_windows_x86_64_arm64.zip" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
           
       - name: Upload dynamic library as release asset
         if: ${{ needs.release.outputs.NEED_BUILD == 'yes' }}
@@ -327,16 +327,20 @@ jobs:
             -DCMAKE_BUILD_TYPE=Release \
             -DANDROID_ABI=x86_64 ..
           cmake --build .
-          cp ./lib/libhv.so ../build_libs/libhv-x86_x64.so
+          cp ./lib/libhv.so ../build_libs/libhv-x86_64.so
 
       - name: Zip the .so files
         run: |
           cd libhv/build_libs
           mkdir -p libhv/include
-          mv libhv-armeabi-v7a.so ./libhv
-          mv libhv-arm64-v8a.so ./libhv
-          mv libhv-x86.so ./libhv
-          mv libhv-x86_x64.so ./libhv
+          mkdir -p libhv/armeabi-v7a
+          mkdir -p libhv/arm64-v8a
+          mkdir -p libhv/x86
+          mkdir -p libhv/x86_64
+          cp ../build-x86_64/lib/libhv.so ./libhv/x86_64
+          cp ../build-x86/lib/libhv.so ./libhv/x86
+          cp ../build-arm64-v8a/lib/libhv.so ./libhv/arm64-v8a
+          cp ../build-armeabi-v7a/lib/libhv.so ./libhv/armeabi-v7a
           cp ../include/hv/* ./libhv/include
           zip -q -r libhv_android_v7a_v8a_x64.zip ./libhv
           echo "over_file_name=libhv_android_v7a_v8a_x64.zip" >> $GITHUB_ENV
