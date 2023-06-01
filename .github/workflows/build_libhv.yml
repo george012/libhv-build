@@ -330,6 +330,7 @@ jobs:
           cp ./lib/libhv.so ../build_libs/libhv-x86_64.so
 
       - name: Zip the .so files
+        if: ${{ needs.release.outputs.NEED_BUILD == 'yes' }}
         run: |
           cd libhv/build_libs
           mkdir -p libhv/include
