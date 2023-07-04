@@ -4,17 +4,18 @@ on:
   workflow_dispatch:
   schedule:
     - cron: '0 */24 * * *' # 每 24 小时检查一次
-
 jobs:
   release:
     runs-on: ubuntu-latest
     outputs:
-      upload_url: ${{ env.upload_url }}
-      NEED_BUILD: ${{ env.NEED_BUILD }}
-      REMOTE_LATEST_VERSION: ${{ env.REMOTE_LATEST_VERSION }}
+      NEED_BUILD: ${{ steps.check-build-need.outputs.NEED_BUILD }}
+      REMOTE_LATEST_VERSION: ${{ steps.check-build-need.outputs.REMOTE_LATEST_VERSION }}
+      UPLOAD_URL: ${{ steps.check-build-need.outputs.UPLOAD_URL }}
     steps:
       - name: Checkout Current Repository
         uses: actions/checkout@v3
+        with:
+          submodules: recursive
 
       - name: Check if build is required
         id: check-build-need
@@ -23,16 +24,13 @@ jobs:
           chmod a+x ./github_repo_version_scan.sh
           build_need=$(./github_repo_version_scan.sh --check_need_update github.com/$GITHUB_REPOSITORY github.com/ithewei/libhv)
           remote_latest_version=$(./github_repo_version_scan.sh --get_latest_version github.com/ithewei/libhv)
-          echo "NEED_BUILD=$build_need" >> $GITHUB_ENV
-          echo "REMOTE_LATEST_VERSION=$remote_latest_version" >> $GITHUB_ENV
           upload_url=$(./github_repo_version_scan.sh --get_latest_upload_url github.com/$GITHUB_REPOSITORY)
-          echo "upload_url=$upload_url" >> $GITHUB_ENV
-        env:
-          NEED_BUILD: $build_need
-          REMOTE_LATEST_VERSION: $remote_latest_version
+          echo "NEED_BUILD=$build_need" >> $GITHUB_OUTPUT
+          echo "REMOTE_LATEST_VERSION=$remote_latest_version" >> $GITHUB_OUTPUT
+          echo "UPLOAD_URL=$upload_url" >> $GITHUB_OUTPUT
 
       - name: Set up Git
-        if: ${{ env.NEED_BUILD }} == "yes"
+        if: ${{ steps.check-build-need.outputs.NEED_BUILD == 'yes' }}
         run: |
           git config --local user.email "${{ secrets.GITCONFIG_EMAIL }}"
           git config --local user.name "${{ secrets.GITCONFIG_NAME }}"
@@ -41,51 +39,42 @@ jobs:
 
       - name: Bump version and push tag
         id: tag-version
-        if: ${{ env.NEED_BUILD }} == "yes"
+        if: ${{ steps.check-build-need.outputs.NEED_BUILD == 'yes' }}
         uses: mathieudutour/github-tag-action@v6.1
         with:
           tag_prefix: ""
-          custom_tag: ${{ env.REMOTE_LATEST_VERSION }}
+          custom_tag: ${{ steps.check-build-need.outputs.REMOTE_LATEST_VERSION }}
           github_token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Step GitHub release
         id: stepCreateRelease
-        if: ${{ env.NEED_BUILD }} == "yes"
+        if: ${{ steps.check-build-need.outputs.NEED_BUILD == 'yes' }}
         uses: ncipollo/release-action@v1
         with:
           skipIfReleaseExists: 'true'
-          tag: ${{ steps.tag-version.outputs.new_tag }}
-          name: ${{ steps.tag-version.outputs.new_tag }}
-
-      - name: handle Upload Url
-        run: |
-          if [ "${{ env.NEED_BUILD }}" == "yes" ]; then
-            echo "upload_url=${{ steps.stepCreateRelease.outputs.upload_url }}" >> $GITHUB_ENV
-          fi
+          tag: ${{ steps.check-build-need.outputs.REMOTE_LATEST_VERSION }}
+          name: ${{ steps.check-build-need.outputs.REMOTE_LATEST_VERSION }}
 
   buildLinux:
     name: buildLinux  
     needs: release
-    if: always()
+    if: needs.release.outputs.NEED_BUILD == 'yes'
     runs-on: ubuntu-latest
     permissions:
       contents: write
     steps:
       - name: Checkout code
-        if: ${{ needs.release.outputs.NEED_BUILD == 'yes' }}
         uses: actions/checkout@v3
         with:
           submodules: true
 
       - name: install dependencies
-        if: ${{ needs.release.outputs.NEED_BUILD == 'yes' }}
         run: |
            sudo apt update
            sudo apt install -y build-essential cmake git jq libssl-dev libnghttp2-dev
            mkdir -p ./libhv/build_libs
 
       - name: build x86_64
-        if: ${{ needs.release.outputs.NEED_BUILD == 'yes' }}
         run: |
           cd libhv
           mkdir build-x86_64 && cd build-x86_64
@@ -93,7 +82,6 @@ jobs:
           make -j$(nproc) VERBOSE=1
 
       - name: build arm64
-        if: ${{ needs.release.outputs.NEED_BUILD == 'yes' }}
         run: |
           cd libhv
           mkdir build-arm64 && cd build-arm64
@@ -101,7 +89,6 @@ jobs:
           make -j$(nproc) VERBOSE=1
 
       - name: merge libs
-        if: ${{ needs.release.outputs.NEED_BUILD == 'yes' }}
         run: |
           cd ./libhv/build_libs
           mkdir -p ./libhv/include
@@ -111,10 +98,9 @@ jobs:
           echo "over_file_name=libhv_linux_x64_arm64.zip" >> $GITHUB_ENV
 
       - name: Upload dynamic library as release asset
-        if: ${{ needs.release.outputs.NEED_BUILD == 'yes' }}
         uses: actions/upload-release-asset@v1
         with:
-          upload_url: ${{ needs.release.outputs.upload_url }}
+          upload_url: ${{ needs.release.outputs.UPLOAD_URL }}
           asset_path: ./libhv/build_libs/${{ env.over_file_name }}
           asset_name: ${{ env.over_file_name }}
           asset_content_type: application/zip
@@ -124,25 +110,22 @@ jobs:
   buildWindows:
     name: buildWindows
     needs: release
-    if: always()
+    if: needs.release.outputs.NEED_BUILD == 'yes'
     runs-on: windows-2022
     permissions:
       contents: write
     steps:
       - name: Checkout code
-        if: ${{ needs.release.outputs.NEED_BUILD == 'yes' }}
         uses: actions/checkout@v3
         with:
           submodules: true
 
       - name: install dependencies
-        if: ${{ needs.release.outputs.NEED_BUILD == 'yes' }}
         run: |
           choco install -y openssl.light tree cmake
           mkdir -p libhv/build_libs
 
       - name: build x86_64
-        if: ${{ needs.release.outputs.NEED_BUILD == 'yes' }}
         run: |
           cd libhv
           mkdir cmake-build-win64 && cd cmake-build-win64
@@ -150,7 +133,6 @@ jobs:
           cmake --build .
 
       - name: build arm64
-        if: ${{ needs.release.outputs.NEED_BUILD == 'yes' }}
         run: |
           cd libhv
           mkdir cmake-build-arm64 && cd cmake-build-arm64
@@ -158,7 +140,6 @@ jobs:
           cmake --build .
 
       - name: merge DLLs
-        if: ${{ needs.release.outputs.NEED_BUILD == 'yes' }}
         run: |
           cd libhv/build_libs
           mkdir -p libhv/include
@@ -171,10 +152,9 @@ jobs:
           echo "over_file_name=libhv_windows_x86_64_arm64.zip" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
           
       - name: Upload dynamic library as release asset
-        if: ${{ needs.release.outputs.NEED_BUILD == 'yes' }}
         uses: actions/upload-release-asset@v1
         with:
-          upload_url: ${{ needs.release.outputs.upload_url }}
+          upload_url: ${{ needs.release.outputs.UPLOAD_URL }}
           asset_path: ./libhv/build_libs/${{ env.over_file_name }}
           asset_name: ${{ env.over_file_name }}
           asset_content_type: application/zip
@@ -192,19 +172,16 @@ jobs:
       HOMEBREW_NO_AUTO_UPDATE: true
     steps:
       - name: Checkout code
-        if: ${{ needs.release.outputs.NEED_BUILD == 'yes' }}
         uses: actions/checkout@v3
         with:
           submodules: true
 
       - name: install dependencies
-        if: ${{ needs.release.outputs.NEED_BUILD == 'yes' }}
         run: |
           brew install openssl@1.1 nghttp2 cmake
           mkdir -p libhv/build_libs
 
       - name: build x86_64 and arm64
-        if: ${{ needs.release.outputs.NEED_BUILD == 'yes' }}
         run: |
           cd libhv
           build() {
@@ -219,7 +196,6 @@ jobs:
           build MAC_UNIVERSAL "arm64;x86_64" 10.12
 
       - name: merge dylibs and fix @rpath
-        if: ${{ needs.release.outputs.NEED_BUILD == 'yes' }}
         run: |
           cd libhv/build_libs
           mkdir -p ./libhv/include
@@ -229,10 +205,9 @@ jobs:
           echo "over_file_name=libhv_apple_universal.zip" >> $GITHUB_ENV
 
       - name: Upload dynamic library as release asset
-        if: ${{ needs.release.outputs.NEED_BUILD == 'yes' }}
         uses: actions/upload-release-asset@v1
         with:
-          upload_url: ${{ needs.release.outputs.upload_url }}
+          upload_url: ${{ needs.release.outputs.UPLOAD_URL }}
           asset_path: ./libhv/build_libs/${{ env.over_file_name }}
           asset_name: ${{ env.over_file_name }}
           asset_content_type: application/zip
@@ -248,33 +223,28 @@ jobs:
       contents: write
     steps:
       - name: Checkout code
-        if: ${{ needs.release.outputs.NEED_BUILD == 'yes' }}
         uses: actions/checkout@v3
         with:
           submodules: true
 
       - name: install dependencies
-        if: ${{ needs.release.outputs.NEED_BUILD == 'yes' }}
         run: |
           sudo apt update
           sudo apt install -y build-essential cmake git jq wget zip unzip tar tree
           mkdir -p libhv/build_libs
 
       - name: Set up JDK 1.8
-        if: ${{ needs.release.outputs.NEED_BUILD == 'yes' }}
         uses: actions/setup-java@v1
         with:
           java-version: 1.8
 
       - name: Set up Android NDK
-        if: ${{ needs.release.outputs.NEED_BUILD == 'yes' }}
         uses: nttld/setup-ndk@v1
         id: setup-ndk
         with:
           ndk-version: r25c
 
       - name: Build dynamic library for Android-armeabi-v7a
-        if: ${{ needs.release.outputs.NEED_BUILD == 'yes' }}
         run: |
           cd libhv
           mkdir build-armeabi-v7a && cd build-armeabi-v7a
@@ -288,7 +258,6 @@ jobs:
           cp ./lib/libhv.so ../build_libs/libhv-armeabi-v7a.so
 
       - name: Build dynamic library for Android-armv8a-arm64
-        if: ${{ needs.release.outputs.NEED_BUILD == 'yes' }}
         run: |
           cd libhv
           mkdir build-arm64-v8a && cd build-arm64-v8a
@@ -302,7 +271,6 @@ jobs:
           cp ./lib/libhv.so ../build_libs/libhv-arm64-v8a.so
 
       - name: Build dynamic library for Android-x86
-        if: ${{ needs.release.outputs.NEED_BUILD == 'yes' }}
         run: |
           cd libhv
           mkdir build-x86 && cd build-x86
@@ -316,7 +284,6 @@ jobs:
           cp ./lib/libhv.so ../build_libs/libhv-x86.so
 
       - name: Build dynamic library for Android-x86_64
-        if: ${{ needs.release.outputs.NEED_BUILD == 'yes' }}
         run: |
           cd libhv
           mkdir build-x86_64 && cd build-x86_64
@@ -330,7 +297,6 @@ jobs:
           cp ./lib/libhv.so ../build_libs/libhv-x86_64.so
 
       - name: Zip the .so files
-        if: ${{ needs.release.outputs.NEED_BUILD == 'yes' }}
         run: |
           cd libhv/build_libs
           mkdir -p libhv/include
@@ -347,10 +313,9 @@ jobs:
           echo "over_file_name=libhv_android_v7a_v8a_x64.zip" >> $GITHUB_ENV
 
       - name: Upload dynamic library as release asset
-        if: ${{ needs.release.outputs.NEED_BUILD == 'yes' }}
         uses: actions/upload-release-asset@v1
         with:
-          upload_url: ${{ needs.release.outputs.upload_url }}
+          upload_url: ${{ needs.release.outputs.UPLOAD_URL }}
           asset_path: ./libhv/build_libs/${{ env.over_file_name }}
           asset_name: ${{ env.over_file_name }}
           asset_content_type: application/zip
