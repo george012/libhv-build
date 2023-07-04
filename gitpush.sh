@@ -19,7 +19,7 @@ Build () {
     && git checkout tags/$remoteRepo_latest_version \
     && cd ../ \
     && git add . \
-    && git commit -m "$RemoteRepoName_version=$remoteRepo_latest_version" \
+    && git commit -m "$RemoteRepoName""_version=$remoteRepo_latest_version" \
     && git push
     
 }
