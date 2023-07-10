@@ -10,7 +10,7 @@ jobs:
     outputs:
       NEED_BUILD: ${{ steps.check-build-need.outputs.NEED_BUILD }}
       REMOTE_LATEST_VERSION: ${{ steps.check-build-need.outputs.REMOTE_LATEST_VERSION }}
-      UPLOAD_URL: ${{ steps.check-build-need.outputs.UPLOAD_URL }}
+      UPLOAD_URL: ${{ steps.stepCreateRelease.outputs.upload_url }}
     steps:
       - name: Checkout Current Repository
         uses: actions/checkout@v3
@@ -24,10 +24,8 @@ jobs:
           chmod a+x ./github_repo_version_scan.sh
           build_need=$(./github_repo_version_scan.sh --check_need_update github.com/$GITHUB_REPOSITORY github.com/ithewei/libhv)
           remote_latest_version=$(./github_repo_version_scan.sh --get_latest_version github.com/ithewei/libhv)
-          upload_url=$(./github_repo_version_scan.sh --get_latest_upload_url github.com/$GITHUB_REPOSITORY)
           echo "NEED_BUILD=$build_need" >> $GITHUB_OUTPUT
           echo "REMOTE_LATEST_VERSION=$remote_latest_version" >> $GITHUB_OUTPUT
-          echo "UPLOAD_URL=$upload_url" >> $GITHUB_OUTPUT
 
       - name: Set up Git
         if: ${{ steps.check-build-need.outputs.NEED_BUILD == 'yes' }}
@@ -164,7 +162,7 @@ jobs:
   buildOSX:
     name: buildOSX
     needs: release
-    if: always()
+    if: needs.release.outputs.NEED_BUILD == 'yes'
     runs-on: macos-latest
     permissions:
       contents: write
@@ -217,7 +215,7 @@ jobs:
   buildAndroid:
     name: buildAndroid
     needs: release
-    if: always()
+    if: needs.release.outputs.NEED_BUILD == 'yes'
     runs-on: ubuntu-latest
     permissions:
       contents: write
